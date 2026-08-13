@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pentagon Hotel and Suites
 
-## Getting Started
+The website for Pentagon Hotel and Suites — 1 Solomon Wali Street, Owhipa Choba,
+Port Harcourt. Built with Next.js 16 (App Router), React 19, Tailwind v4,
+shadcn/ui on Base UI, Framer Motion and Nunito.
 
-First, run the development server:
+The design spec this was built from is in [BLUEPRINT.md](BLUEPRINT.md).
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn dev          # http://localhost:3000
+yarn build        # production build (all routes prerender statically)
+yarn start        # serve the production build
+yarn lint         # eslint
+npx tsc --noEmit  # typecheck
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How it's laid out
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+app/                    one folder per route, all statically rendered
+  layout.tsx            fonts, theme, header/footer, global JSON-LD
+  sitemap.ts robots.ts manifest.ts opengraph-image.tsx
+components/
+  booking/              booking-search (hero widget), booking-flow, manage-booking
+  forms/                contact, event quote, table reservation
+  motion/reveal.tsx     the only Framer Motion wrappers on the site
+  ui/                   shadcn components (Base UI primitives)
+lib/
+  site.ts               NAP, contact channels, tax rates, currency formatting
+  data.ts               all content: rooms, offers, venues, dining, FAQs, posts…
+  booking.ts            pricing, availability and persistence — the backend seam
+  format.ts             hydration-safe date formatting
+  nav.ts                navigation model shared by header, tray and footer
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Everything is a Server Component unless it needs interaction. The client
+components are: the header (scroll state + nav tray), theme toggle, booking
+search, booking flow, manage-booking, the three forms, the room gallery, the
+gallery lightbox, the reviews carousel and the map.
 
-## Learn More
+## Things to change before launch
 
-To learn more about Next.js, take a look at the following resources:
+1. **Photography.** Every image currently points at Unsplash and is a stand-in.
+   Replace them in `lib/data.ts` (and the handful of hero URLs in `app/*/page.tsx`).
+   Prefer local files in `/public` — Next then generates blur placeholders
+   automatically and you can drop the `remotePatterns` entry from
+   `next.config.ts`.
+2. **Domain.** `site.url` in `lib/site.ts` drives canonicals, OG URLs, the
+   sitemap and every JSON-LD `@id`.
+3. **Email addresses and registration numbers.** `lib/site.ts` and the footer.
+4. **Reviews.** `lib/data.ts` holds sample reviews and they feed the
+   `aggregateRating` in structured data. Google requires these to be genuine —
+   replace them with real ones or remove the `aggregateRating` block from
+   `components/structured-data.tsx`.
+5. **Content accuracy.** Rates, hours, capacities, distances and policies are
+   plausible placeholders written to the brief. Have the hotel check every number.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Wiring up the real backend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Three functions in `lib/booking.ts` are the entire integration surface:
 
-## Deploy on Vercel
+| Function | Currently | Should become |
+|---|---|---|
+| `checkAvailability()` | deterministic mock derived from date + room slug | a call to the PMS / channel manager |
+| `createReservation()` | writes to `localStorage`, returns a `PHS-` reference | a POST to the booking API, which also sends the confirmation email/SMS |
+| `findReservation()` / `cancelReservation()` | reads/writes `localStorage` | authenticated lookup by reference |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+All three are already `async` and the UI awaits them, so nothing above them
+changes. The forms (contact, events, table booking) resolve locally in the same
+way and each has a single `await` to replace with a POST.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Payment:** the booking flow deliberately stops at "settle at the hotel". No
+card data is collected, transmitted or stored anywhere in this codebase. Adding
+Paystack or Flutterwave means adding a step after `createReservation()` and
+redirecting to the provider's hosted checkout — keep it hosted, and the PCI
+scope stays where it is.
+
+## Quality bars
+
+- **Static everything.** All routes prerender; there is no server work per request.
+- **Lighthouse.** Run against `yarn build && yarn start`, desktop preset.
+  Accessibility, best practices and SEO score 100; performance is high 80s to
+  100 depending on the page (the image-heavy homepage is the floor). Local runs
+  are dominated by fetching remote Unsplash originals — swapping in local
+  photography removes that variable entirely.
+- **Accessibility.** WCAG 2.2 AA is the target: landmarks, one `h1` per page,
+  4.5:1 contrast in both themes, 44px targets, keyboard-operable everything,
+  `prefers-reduced-motion` honoured, and no `aria-hidden` on anything focusable.
+- **Security headers** are set in `next.config.ts`. Public forms carry a honeypot
+  field and a submission-timing check.
+
+## Notes on the stack
+
+- **shadcn style is `base-nova`**, so the primitives are Base UI, not Radix.
+  Practical consequences: `render={<Link/>}` instead of `asChild`, `Select`
+  takes an `items` array, and `Accordion`/`Tabs` use Base UI's prop names.
+- **lucide-react no longer ships brand icons** — Instagram, Facebook and X are
+  hand-drawn in `components/social-icons.tsx`.
+- **The map never loads until asked.** `components/map-embed.tsx` renders a
+  static preview and only injects the Google iframe on click, so no third-party
+  request or cookie happens on first paint.

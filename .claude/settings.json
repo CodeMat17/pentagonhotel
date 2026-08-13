@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest add accordion tabs separator popover tooltip dropdown-menu carousel avatar checkbox radio-group switch skeleton breadcrumb navigation-menu progress --yes --overwrite)"
+    ]
+  }
+}

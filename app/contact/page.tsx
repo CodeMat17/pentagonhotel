@@ -1,0 +1,159 @@
+import type { Metadata } from "next";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MailIcon,
+  MapPinIcon,
+  MessageCircleIcon,
+  PhoneIcon,
+} from "lucide-react";
+
+import { ContactForm } from "@/components/forms/contact-form";
+import { MapEmbed } from "@/components/map-embed";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
+import { PageHeader } from "@/components/page-header";
+import { Section, SectionHeading } from "@/components/section";
+import { fullAddress, site, telLink, whatsapp } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Contact us",
+  description:
+    "Call 0803 383 3628, message us on WhatsApp or email Pentagon Hotel and Suites, 1 Solomon Wali Street, Owhipa Choba, Port Harcourt. Reception open 24 hours.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: `Contact · ${site.name}`,
+    description: "Phone, WhatsApp, email and address. Reception answers 24 hours.",
+    url: `${site.url}/contact`,
+  },
+};
+
+const channels = [
+  {
+    Icon: PhoneIcon,
+    title: "Call reception",
+    detail: site.phone.display,
+    note: "24 hours a day, every day",
+    href: telLink,
+  },
+  {
+    Icon: MessageCircleIcon,
+    title: "WhatsApp",
+    detail: "Message us",
+    note: "Usually the fastest reply",
+    href: whatsapp.general,
+    external: true,
+  },
+  {
+    Icon: CalendarIcon,
+    title: "Reservations",
+    detail: site.email.reservations,
+    note: "Bookings, changes and group rates",
+    href: `mailto:${site.email.reservations}`,
+  },
+  {
+    Icon: MailIcon,
+    title: "Events team",
+    detail: site.email.events,
+    note: "Conferences, weddings and quotes",
+    href: `mailto:${site.email.events}`,
+  },
+];
+
+export default function ContactPage() {
+  return (
+    <>
+      <PageHeader
+        title="Contact us"
+        description="Reception is staffed 24 hours a day, and whoever answers works here — no call centre, no queue."
+        crumbs={[{ name: "Contact", href: "/contact" }]}
+      />
+
+      <Section>
+        <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {channels.map(({ Icon, title, detail, note, href, external }) => (
+            <StaggerItem as="li" key={title}>
+              <a
+                href={href}
+                {...(external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                className="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-foreground/10 transition-colors hover:ring-brand"
+              >
+                <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-muted text-brand">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <span className="mt-4 font-heading text-base font-extrabold">
+                  {title}
+                </span>
+                <span className="mt-1 text-sm font-semibold break-all text-brand">
+                  {detail}
+                </span>
+                <span className="mt-1 text-xs text-muted-foreground">{note}</span>
+              </a>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </Section>
+
+      <Section muted aria-label="Send us a message">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+          <div>
+            <SectionHeading
+              eyebrow="Write to us"
+              title="Send a message"
+              description="Tell us what you need and we'll come back within one working day — usually within the hour during office hours."
+            />
+            <Reveal delay={0.06} className="mt-8">
+              <ContactForm />
+            </Reveal>
+          </div>
+
+          <div>
+            <Reveal delay={0.08}>
+              <MapEmbed />
+            </Reveal>
+
+            <Reveal delay={0.1} className="mt-6 space-y-4">
+              <div className="flex gap-3 rounded-2xl bg-background p-5 ring-1 ring-foreground/10">
+                <MapPinIcon className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
+                <div>
+                  <h2 className="font-heading text-base font-extrabold">Address</h2>
+                  <address className="mt-1 text-sm not-italic text-muted-foreground">
+                    {fullAddress}
+                  </address>
+                </div>
+              </div>
+
+              <div className="flex gap-3 rounded-2xl bg-background p-5 ring-1 ring-foreground/10">
+                <ClockIcon className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
+                <div>
+                  <h2 className="font-heading text-base font-extrabold">Hours</h2>
+                  <dl className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    <div className="flex justify-between gap-4">
+                      <dt>Reception</dt>
+                      <dd className="font-semibold">24 hours</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Reservations desk</dt>
+                      <dd className="font-semibold">7:00 – 22:00</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Events team</dt>
+                      <dd className="font-semibold">Mon–Sat, 8:00 – 18:00</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Check-in / checkout</dt>
+                      <dd className="font-semibold">
+                        {site.checkIn} / {site.checkOut}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </Section>
+    </>
+  );
+}
