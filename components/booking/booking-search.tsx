@@ -131,7 +131,7 @@ export function BookingSearch({
               <span className="text-[0.68rem] font-bold tracking-[0.14em] text-muted-foreground uppercase">
                 Check-in — Checkout
               </span>
-              <span className="text-sm font-bold">
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                 {dateLabel}
                 {nights > 0 && (
                   <span className="ml-2 font-semibold text-muted-foreground">
@@ -174,7 +174,7 @@ export function BookingSearch({
               <span className="text-[0.68rem] font-bold tracking-[0.14em] text-muted-foreground uppercase">
                 Guests &amp; rooms
               </span>
-              <span className="text-sm font-bold">{guestLabel}</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{guestLabel}</span>
             </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 gap-0 p-4">

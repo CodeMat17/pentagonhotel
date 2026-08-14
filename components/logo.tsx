@@ -41,11 +41,11 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark className="size-8 shrink-0 text-brand" />
       {showText && (
-        <span className="flex flex-col leading-none">
-          <span className="font-heading text-[0.95rem] font-extrabold tracking-tight">
+        <span className="flex flex-col leading-4">
+          <span className="font-heading font-extrabold tracking-tight">
             Pentagon
           </span>
-          <span className="text-[0.62rem] font-semibold tracking-[0.22em] text-muted-foreground uppercase">
+          <span className="text-[0.68rem] font-semibold tracking-[0.22em] uppercase">
             Hotel &amp; Suites
           </span>
         </span>
