@@ -45,7 +45,7 @@ export const lodgingBusinessSchema = {
   hasMap: `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}`,
   priceRange: "₦₦",
   currenciesAccepted: "NGN",
-  paymentAccepted: "Cash, Credit Card, Bank Transfer",
+  paymentAccepted: "Cash, Credit Card, Bank Transfer, Online Payment",
   checkinTime: site.checkIn,
   checkoutTime: site.checkOut,
   starRating: { "@type": "Rating", ratingValue: 4 },

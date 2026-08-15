@@ -26,7 +26,7 @@ export default function BookingPage() {
     <>
       <PageHeader
         title="Book your stay"
-        description="Two minutes, no account, no deposit. Cancel free on most rates, and settle at the hotel."
+        description="Two minutes, no account, no deposit. Cancel free on most rates, and pay online or at the hotel."
         crumbs={[{ name: "Book", href: "/booking" }]}
       />
 

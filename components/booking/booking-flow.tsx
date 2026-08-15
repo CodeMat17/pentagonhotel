@@ -527,7 +527,7 @@ export function BookingFlow() {
         {step === 3 && room && range?.from && range?.to && (
           <StepPanel
             title="Review and confirm"
-            description="One last look. Nothing is charged now — you settle at the hotel."
+            description="One last look. Pay online now, or settle at the hotel."
           >
             <dl className="divide-y rounded-2xl bg-card ring-1 ring-foreground/10">
               <Row label="Room">
@@ -563,10 +563,11 @@ export function BookingFlow() {
                 How payment works
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                We don&apos;t take card details on this website. Your room is held
-                against your name and you settle at the hotel by card, bank
-                transfer or cash. Corporate guests can request an invoice at
-                check-in.
+                You can pay online here through our secure payment provider, or
+                have the room held against your name and settle at the hotel by
+                card, bank transfer or cash. Card details are handled by the
+                payment provider and never stored on our servers. Corporate
+                guests can request an invoice at check-in.
               </p>
             </div>
 
@@ -1042,7 +1043,7 @@ function BookingSummary({
               </dd>
             </div>
             <p className="text-xs text-muted-foreground">
-              All taxes and charges included. Payable at the hotel.
+              All taxes and charges included. Pay online or at the hotel.
             </p>
           </dl>
         ) : (
@@ -1143,7 +1144,7 @@ function Confirmation({
               : ""}
           </Row>
           <Row label="Total">
-            {formatNaira(price.total)} — payable at the hotel
+            {formatNaira(price.total)} — payable online or at the hotel
           </Row>
         </dl>
 

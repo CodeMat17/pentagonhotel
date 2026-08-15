@@ -91,8 +91,8 @@ export default function TermsPage() {
           <section id="payment" className="scroll-mt-28">
             <h2 className="font-heading text-2xl font-extrabold">Payment</h2>
             <ul className="mt-3 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
-              <li>We accept card, bank transfer and cash at the hotel. No deposit is required for standard bookings.</li>
-              <li>We never take card details through this website, by email or over the phone. If anyone asks you for them in our name, it is not us — call {site.phone.display} and tell us.</li>
+              <li>You can pay online on this website through our secure payment provider, or by card, bank transfer or cash at the hotel. No deposit is required for standard bookings.</li>
+              <li>Card details entered online are processed by our PCI-compliant payment provider and are never stored by us. We never ask for card details by email or over the phone. If anyone asks you for them in our name that way, it is not us — call {site.phone.display} and tell us.</li>
               <li>A pre-authorisation of ₦25,000 per room may be taken at check-in against incidentals, and is released at checkout.</li>
               <li>Corporate accounts may be invoiced monthly on 30-day terms by prior arrangement.</li>
             </ul>

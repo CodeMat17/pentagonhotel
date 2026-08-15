@@ -77,9 +77,10 @@ export default function PrivacyPage() {
               What we do not collect
             </h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              We do not take card details through this website. Payment happens at
-              the hotel, through a PCI-compliant terminal or by bank transfer, and
-              no card number ever reaches our servers. We do not run advertising
+              We never store card details. Online payments on this website are
+              handled entirely by our PCI-compliant payment provider, and no card
+              number ever reaches our servers; payments made at the hotel go
+              through a PCI-compliant terminal or by bank transfer. We do not run advertising
               trackers, and we do not sell or share your data with data brokers.
             </p>
           </section>

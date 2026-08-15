@@ -207,7 +207,7 @@ export function ManageBooking() {
                 </Detail>
               )}
               <Detail label="Total">
-                {formatNaira(booking.total)} — payable at the hotel
+                {formatNaira(booking.total)} — payable online or at the hotel
               </Detail>
               {booking.guest.specialRequests && (
                 <Detail label="Special requests">
