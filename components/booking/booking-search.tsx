@@ -103,7 +103,7 @@ export function BookingSearch({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-background/95 p-2.5 shadow-xl ring-1 ring-foreground/10 backdrop-blur-xl",
+        "rounded-2xl bg-background/95 p-2.5 shadow-[0_24px_60px_-30px_rgb(0_0_0/0.6)] ring-1 ring-foreground/10 backdrop-blur-xl transition-shadow duration-500 focus-within:ring-brand/50 hover:shadow-[0_28px_70px_-28px_rgb(0_0_0/0.65)]",
         hero ? "w-full" : "w-full",
         className,
       )}
@@ -131,7 +131,7 @@ export function BookingSearch({
               <span className="text-[0.68rem] font-bold tracking-[0.14em] text-muted-foreground uppercase">
                 Check-in — Checkout
               </span>
-              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+              <span className="text-sm font-bold text-foreground">
                 {dateLabel}
                 {nights > 0 && (
                   <span className="ml-2 font-semibold text-muted-foreground">
@@ -174,7 +174,7 @@ export function BookingSearch({
               <span className="text-[0.68rem] font-bold tracking-[0.14em] text-muted-foreground uppercase">
                 Guests &amp; rooms
               </span>
-              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{guestLabel}</span>
+              <span className="text-sm font-bold text-foreground">{guestLabel}</span>
             </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 gap-0 p-4">
@@ -211,7 +211,7 @@ export function BookingSearch({
         <Button
           size="lg"
           onClick={search}
-          className="h-14 gap-2 bg-brand px-7 text-base font-extrabold text-brand-foreground hover:bg-brand/90"
+          className="h-14 gap-2 bg-brand px-7 text-base font-extrabold text-brand-foreground transition-transform duration-300 hover:bg-brand/90 hover:scale-[1.02] active:scale-[0.99]"
         >
           <SearchIcon className="size-[18px]" />
           Check availability

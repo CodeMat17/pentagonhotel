@@ -31,7 +31,7 @@ export function RoomCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 transition-shadow duration-300 hover:shadow-lg",
+        "card-lift group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 hover:ring-brand/40",
         className,
       )}
     >
@@ -44,7 +44,7 @@ export function RoomCard({
           priority={priority}
           loading={priority ? undefined : "lazy"}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
         />
         <div className="absolute top-3 left-3 flex gap-1.5">
           <Badge className="bg-background/90 font-bold text-foreground backdrop-blur">
@@ -62,7 +62,7 @@ export function RoomCard({
         <h3 className="font-heading text-lg font-extrabold tracking-tight">
           <Link
             href={`/rooms/${room.slug}`}
-            className="after:absolute after:inset-0 hover:text-brand"
+            className="after:absolute after:inset-0 transition-colors hover:text-brand"
           >
             {room.name}
           </Link>

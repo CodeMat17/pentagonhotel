@@ -21,7 +21,9 @@ import {
 import { BookingSearch } from "@/components/booking/booking-search";
 import { GalleryPreview } from "@/components/gallery-preview";
 import { MapEmbed } from "@/components/map-embed";
+import { BrushUnderline } from "@/components/motion/brush-underline";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
+import { WordReveal } from "@/components/motion/text-reveal";
 import { ReviewsCarousel } from "@/components/reviews-carousel";
 import { RoomCard } from "@/components/room-card";
 import { Section, SectionHeading } from "@/components/section";
@@ -82,79 +84,120 @@ export default function HomePage() {
   return (
     <>
       {/* ------------------------------------------------------------ hero */}
-      <section className='relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-24 pb-10 text-white lg:pb-16'>
-        <Image
-          src={heroImage}
-          alt='A made-up guest room at Pentagon Hotel and Suites, lit warmly at dusk'
-          fill
-          priority
-          fetchPriority='high'
-          sizes='100vw'
-          className='-z-20 object-cover'
+      <section className='relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-28 pb-14 text-white lg:pb-20'>
+        <div className='absolute inset-0 -z-20 overflow-hidden'>
+          <Image
+            src={heroImage}
+            alt='A made-up guest room at Pentagon Hotel and Suites, lit warmly at dusk'
+            fill
+            priority
+            fetchPriority='high'
+            sizes='100vw'
+            className='ken-burns object-cover'
+          />
+        </div>
+
+        {/*
+         * Three scrims, not one. The bottom ramp carries the copy, the left
+         * wash protects the headline on wide screens, and the vignette stops
+         * the corners from pulling the eye off the page.
+         */}
+        <div
+          aria-hidden='true'
+          className='absolute inset-0 -z-10 bg-gradient-to-t from-black/92 via-black/62 to-black/35'
         />
         <div
           aria-hidden='true'
-          className='absolute inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/60 to-black/45'
+          className='absolute inset-0 -z-10 bg-gradient-to-r from-black/70 via-black/25 to-transparent'
+        />
+        <div
+          aria-hidden='true'
+          className='absolute inset-0 -z-10 [background:radial-gradient(120%_85%_at_50%_15%,transparent_35%,rgb(0_0_0/0.45)_100%)]'
         />
 
         <div className='container-page'>
-          <Reveal y={24} className='max-w-3xl'>
-            <p className='eyebrow text-[#E3B161] '>
-              <span aria-hidden='true' className='h-px w-6 ' />
+          <Reveal y={20} className='max-w-3xl'>
+            <p className='eyebrow text-on-image text-[#EBC98A]'>
+              <span
+                aria-hidden='true'
+                className='h-px w-6 bg-[#EBC98A]'
+              />
               Owhipa Choba · Port Harcourt
             </p>
+          </Reveal>
 
-            <h1 className='display mt-5 text-[2.6rem] leading-[1.04] sm:text-6xl lg:text-7xl'>
-              Pentagon Hotel <span className='text-[#E3B161]'>&amp;</span>{" "}
-              Suites
-            </h1>
+          <WordReveal
+            delay={0.15}
+            className='display text-on-image mt-5 max-w-4xl text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-7xl'>
+            {[
+              <span key='pentagon' className='relative inline-block'>
+                Pentagon
+                <BrushUnderline delay={0.75} />
+              </span>,
+              "Hotel",
+              <span key='amp' className='text-[#EBC98A]'>
+                &amp;
+              </span>,
+              "Suites",
+            ]}
+          </WordReveal>
 
-            <p className='mt-6 max-w-xl text-lg leading-relaxed text-pretty text-white/85 sm:text-xl'>
+          <Reveal y={20} delay={0.45} className='max-w-3xl'>
+            <p className='text-on-image mt-7 max-w-xl text-lg leading-relaxed text-pretty text-white/90 sm:text-xl'>
               Rooms that stay cool and lit when the street doesn&apos;t. A
               kitchen people drive across town for. Event spaces with their own
               front door. Five minutes from UNIPORT.
             </p>
 
-            <div className='mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-semibold'>
-              <span className='flex items-center gap-1.5'>
+            <div className='mt-7 flex flex-wrap items-center gap-2.5 text-sm font-semibold'>
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3.5 py-1.5 ring-1 ring-white/25 backdrop-blur-md'>
                 <StarIcon
-                  className='size-4 fill-brand text-brand'
+                  className='size-4 fill-[#EBC98A] text-[#EBC98A]'
                   aria-hidden='true'
                 />
-                {ratingSummary.value} / 5 from {ratingSummary.count} guest
-                reviews
+                {ratingSummary.value} / 5 · {ratingSummary.count} guest reviews
               </span>
-              <span
-                className='hidden h-4 w-px bg-white/30 sm:block'
-                aria-hidden='true'
-              />
-              <span className='text-white/80'>
-                Best rate guaranteed when you book direct
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3.5 py-1.5 ring-1 ring-white/25 backdrop-blur-md'>
+                <ShieldCheckIcon
+                  className='size-4 text-[#EBC98A]'
+                  aria-hidden='true'
+                />
+                Best rate guaranteed, booked direct
               </span>
             </div>
           </Reveal>
 
-          <Reveal y={28} delay={0.12} className='mt-9 lg:mt-12'>
+          <Reveal y={28} delay={0.6} className='mt-9 lg:mt-12'>
             <BookingSearch />
           </Reveal>
 
           <Reveal
             y={16}
-            delay={0.24}
-            className='mt-6 hidden grid-cols-4 gap-4 lg:grid'>
+            delay={0.75}
+            className='mt-7 hidden grid-cols-4 gap-4 lg:grid'>
             {quickFacts.map(({ Icon, label, value }) => (
-              <div key={label} className='flex items-center gap-2.5 text-sm'>
+              <div
+                key={label}
+                className='group flex items-center gap-2.5 rounded-xl px-1 py-1 text-sm transition-colors'>
                 <Icon
-                  className='size-4 shrink-0 text-brand'
+                  className='size-4 shrink-0 text-[#EBC98A] transition-transform duration-500 group-hover:scale-110'
                   aria-hidden='true'
                 />
-                <span>
-                  <span className='block text-xs text-white/60'>{label}</span>
+                <span className='text-on-image'>
+                  <span className='block text-xs text-white/70'>{label}</span>
                   <span className='font-bold'>{value}</span>
                 </span>
               </div>
             ))}
           </Reveal>
+        </div>
+
+        <div
+          aria-hidden='true'
+          className='pointer-events-none absolute inset-x-0 bottom-4 hidden justify-center lg:flex'>
+          <span className='animate-scroll-cue flex h-9 w-5 items-start justify-center rounded-full pt-1.5 ring-1 ring-white/40'>
+            <span className='h-1.5 w-0.5 rounded-full bg-white/80' />
+          </span>
         </div>
       </section>
 
@@ -173,7 +216,7 @@ export default function HomePage() {
             <StaggerItem
               as='li'
               key={title}
-              className='rounded-2xl bg-card p-6 ring-1 ring-foreground/10'>
+              className='card-lift sheen rounded-2xl bg-card p-6 ring-1 ring-foreground/10 hover:ring-brand/40'>
               <span className='inline-flex size-11 items-center justify-center rounded-xl bg-brand-muted text-brand'>
                 <Icon className='size-5' aria-hidden='true' />
               </span>
@@ -188,7 +231,7 @@ export default function HomePage() {
 
           <StaggerItem
             as='li'
-            className='flex flex-col justify-between rounded-2xl bg-brand p-6 text-brand-foreground'>
+            className='card-lift sheen flex flex-col justify-between rounded-2xl bg-brand p-6 text-brand-foreground'>
             <div>
               <SparklesIcon className='size-6' aria-hidden='true' />
               <h3 className='mt-4 font-heading text-lg font-extrabold'>
@@ -256,7 +299,7 @@ export default function HomePage() {
         <Stagger className='mt-12 grid gap-6 lg:grid-cols-3'>
           {topOffers.map((offer) => (
             <StaggerItem key={offer.slug} className='h-full'>
-              <article className='group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10'>
+              <article className='card-lift group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 hover:ring-brand/40'>
                 <div className='relative aspect-[16/10] overflow-hidden'>
                   <Image
                     src={offer.image.src}
@@ -321,7 +364,7 @@ export default function HomePage() {
                 <StaggerItem
                   as='li'
                   key={venue.slug}
-                  className='flex gap-4 rounded-xl bg-background p-4 ring-1 ring-foreground/10'>
+                  className='flex gap-4 rounded-xl bg-background p-4 ring-1 ring-foreground/10 transition-colors duration-300 hover:ring-brand/40'>
                   <UtensilsIcon
                     className='mt-0.5 size-5 shrink-0 text-brand'
                     aria-hidden='true'
@@ -380,7 +423,7 @@ export default function HomePage() {
         <Stagger className='mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4'>
           {venues.map((venue) => (
             <StaggerItem key={venue.slug} className='h-full'>
-              <article className='group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10'>
+              <article className='card-lift group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 hover:ring-brand/40'>
                 <div className='relative aspect-[4/3] overflow-hidden'>
                   <Image
                     src={venue.image.src}
@@ -464,7 +507,7 @@ export default function HomePage() {
                 <StaggerItem
                   as='li'
                   key={place.name}
-                  className='flex items-center justify-between gap-4 p-4'>
+                  className='flex items-center justify-between gap-4 p-4 transition-colors duration-300 hover:bg-brand-muted/40'>
                   <span>
                     <span className='block text-sm font-bold'>
                       {place.name}

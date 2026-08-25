@@ -181,3 +181,74 @@
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
+@layer components {
+  /*
+   * Hero type sits on a photograph, so contrast can't come from a colour
+   * token alone. A soft dark shadow keeps every line above 4.5:1 no matter
+   * which part of the image lands behind it, in light or dark mode.
+   */
+  .text-on-image {
+    text-shadow:
+      0 1px 2px rgb(0 0 0 / 0.55),
+      0 4px 24px rgb(0 0 0 / 0.4);
+  }
+
+  /* Slow drift on the hero photograph — motion without anything moving fast. */
+  .ken-burns {
+    animation: ken-burns 26s ease-in-out infinite alternate;
+    transform-origin: 60% 45%;
+  }
+
+  /*
+   * Card lift shared by rooms, offers and venues. The gold ring only appears
+   * on hover, which keeps the resting grid calm.
+   */
+  .card-lift {
+    @apply transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)];
+    @apply hover:-translate-y-1 hover:shadow-[0_18px_44px_-24px_rgb(0_0_0/0.45)];
+  }
+
+  /* Faint gold sheen that sweeps a surface once on hover. */
+  .sheen {
+    @apply relative overflow-hidden;
+  }
+  .sheen::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 -translate-x-full;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in oklab, var(--brand) 22%, transparent) 50%,
+      transparent 70%
+    );
+    transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sheen:hover::after {
+    @apply translate-x-full;
+  }
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.16) translate3d(-1.5%, -1.5%, 0);
+  }
+}
+
+@keyframes scroll-cue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.animate-scroll-cue {
+  animation: scroll-cue 2s ease-in-out infinite;
+}
