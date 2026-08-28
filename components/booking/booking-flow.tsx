@@ -37,10 +37,12 @@ import {
   createReservation,
   nightsBetween,
   validatePromoCode,
+  type AppliedPromo,
   type GuestDetails,
   type Reservation,
 } from "@/lib/booking";
-import { extraServices, getRoom, rooms, type Room } from "@/lib/data";
+import { cleanError } from "@/lib/client";
+import type { ExtraService, RoomSummary } from "@/lib/content";
 import { formatNaira, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +68,13 @@ const emptyGuest: GuestDetails = {
   arrivalTime: "",
 };
 
-export function BookingFlow() {
+export function BookingFlow({
+  rooms,
+  extraServices,
+}: {
+  rooms: RoomSummary[];
+  extraServices: ExtraService[];
+}) {
   const params = useSearchParams();
   const today = startOfToday();
 
@@ -100,7 +108,8 @@ export function BookingFlow() {
   // ------------------------------------------------------------- extras
   const [extraIds, setExtraIds] = useState<string[]>([]);
   const [promoInput, setPromoInput] = useState("");
-  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promo, setPromo] = useState<AppliedPromo | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
   const [guest, setGuest] = useState<GuestDetails>(emptyGuest);
   const [errors, setErrors] = useState<Partial<Record<keyof GuestDetails, string>>>({});
   const [agreed, setAgreed] = useState(false);
@@ -110,11 +119,13 @@ export function BookingFlow() {
   const [confirmed, setConfirmed] = useState<Reservation | null>(null);
 
   const nights = nightsBetween(range?.from, range?.to);
-  const room = roomSlug ? (getRoom(roomSlug) ?? null) : null;
+  const room = roomSlug
+    ? (rooms.find((candidate) => candidate.slug === roomSlug) ?? null)
+    : null;
 
   const price = useMemo(
-    () => calculatePrice({ room, nights, roomCount, extraIds, promoCode }),
-    [room, nights, roomCount, extraIds, promoCode],
+    () => calculatePrice({ room, nights, roomCount, extraIds, extras: extraServices, promo }),
+    [room, nights, roomCount, extraIds, extraServices, promo],
   );
 
   /**
@@ -126,12 +137,10 @@ export function BookingFlow() {
     async (from: Date) => {
       setChecking(true);
       try {
-        const result = await checkAvailability({
-          from,
-          adults,
-          children,
-          rooms: roomCount,
-        });
+        const result = await checkAvailability(
+          { from, adults, children, rooms: roomCount },
+          rooms,
+        );
         setAvailability(result);
       } catch {
         toast.error("We couldn't load live availability", {
@@ -141,7 +150,7 @@ export function BookingFlow() {
         setChecking(false);
       }
     },
-    [adults, children, roomCount],
+    [adults, children, roomCount, rooms],
   );
 
   function goToStep(next: number) {
@@ -168,16 +177,25 @@ export function BookingFlow() {
     goToStep(2);
   }
 
-  function applyPromo() {
-    const result = validatePromoCode(promoInput);
-    if (!result.valid) {
-      toast.error("That code isn't valid", {
-        description: "Check the spelling, or see our Offers page for live codes.",
-      });
-      return;
+  // The server owns the discount table; the browser only learns whether the code
+  // it was handed is real, and by how much.
+  async function applyPromo() {
+    setApplyingPromo(true);
+    try {
+      const result = await validatePromoCode(promoInput);
+      if (!result) {
+        toast.error("That code isn't valid", {
+          description: "Check the spelling, or see our Offers page for live codes.",
+        });
+        return;
+      }
+      setPromo(result);
+      toast.success("Promo code applied", { description: result.label });
+    } catch (error) {
+      toast.error(cleanError(error, "We couldn't check that code just now."));
+    } finally {
+      setApplyingPromo(false);
     }
-    setPromoCode(promoInput.trim().toUpperCase());
-    toast.success("Promo code applied", { description: result.label });
   }
 
   function validateGuest() {
@@ -220,7 +238,7 @@ export function BookingFlow() {
         children,
         roomCount,
         extras: extraIds,
-        promoCode,
+        promoCode: promo?.code ?? null,
         guest,
         total: price.total,
       });
@@ -419,16 +437,16 @@ export function BookingFlow() {
                   variant="outline"
                   size="lg"
                   className="h-11 font-bold"
-                  onClick={applyPromo}
-                  disabled={!promoInput.trim()}
+                  onClick={() => void applyPromo()}
+                  disabled={!promoInput.trim() || applyingPromo}
                 >
-                  <TagIcon /> Apply
+                  <TagIcon /> {applyingPromo ? "Checking…" : "Apply"}
                 </Button>
               </div>
-              {promoCode && (
+              {promo && (
                 <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-brand">
                   <CheckIcon className="size-4" aria-hidden="true" />
-                  {promoCode} applied — {formatNaira(price.discount)} off
+                  {promo.code} applied — {formatNaira(price.discount)} off
                 </p>
               )}
             </div>
@@ -838,7 +856,7 @@ function RoomOption({
   selected,
   onSelect,
 }: {
-  room: Room;
+  room: RoomSummary;
   nights: number;
   roomCount: number;
   left: number;
@@ -954,7 +972,7 @@ function BookingSummary({
   extraIds,
   price,
 }: {
-  room: Room | null;
+  room: RoomSummary | null;
   nights: number;
   adults: number;
   childCount: number;

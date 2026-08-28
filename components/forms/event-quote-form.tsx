@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { eventTypes, venues } from "@/lib/data";
+import { cleanError, runMutation } from "@/lib/client";
+import { m } from "@/lib/convex";
+import type { Venue } from "@/lib/content";
 import { site } from "@/lib/site";
 
 const equipmentOptions = [
@@ -41,11 +43,19 @@ const cateringOptions = [
   { value: "cocktail", label: "Cocktail reception" },
 ];
 
-const typeItems = eventTypes.map((type) => ({ value: type, label: type }));
-const venueItems = [
-  { value: "unsure", label: "Not sure — recommend one" },
-  ...venues.map((venue) => ({ value: venue.slug, label: venue.name })),
+/** The kinds of event we quote for. Not content — this list drives routing. */
+const eventTypes = [
+  "Conference",
+  "Wedding",
+  "Corporate meeting",
+  "Training / workshop",
+  "Product launch",
+  "Birthday / private party",
+  "AGM",
+  "Other",
 ];
+
+const typeItems = eventTypes.map((type) => ({ value: type, label: type }));
 
 /**
  * Request-a-quote for the event spaces.
@@ -54,8 +64,13 @@ const venueItems = [
  * headcount, room, catering, equipment and contact — so the first reply is a
  * quote rather than a list of questions.
  */
-export function EventQuoteForm() {
+export function EventQuoteForm({ venues }: { venues: Venue[] }) {
   const today = startOfToday();
+
+  const venueItems = [
+    { value: "unsure", label: "Not sure — recommend one" },
+    ...venues.map((space) => ({ value: space.slug, label: space.name })),
+  ];
 
   const [type, setType] = useState(eventTypes[0]);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -97,20 +112,56 @@ export function EventQuoteForm() {
     }
 
     setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setPending(false);
+    try {
+      await runMutation(m.sendMessage, {
+        kind: "event-quote",
+        name,
+        email,
+        phone,
+        subject: `${type} for ${guests} on ${format(date, "d MMM yyyy")}`,
+        body: notes || "No additional notes.",
+        // Everything the events team needs to price the job, in one payload.
+        details: [
+          { label: "Event type", value: type },
+          { label: "Date", value: format(date, "yyyy-MM-dd") },
+          { label: "Guests", value: guests },
+          {
+            label: "Space",
+            value:
+              venueItems.find((item) => item.value === venue)?.label ?? "Not sure",
+          },
+          {
+            label: "Catering",
+            value:
+              cateringOptions.find((item) => item.value === catering)?.label ??
+              catering,
+          },
+          { label: "Equipment", value: equipment.join(", ") || "None requested" },
+          { label: "Organisation", value: organisation || "—" },
+        ],
+      });
 
-    toast.success("Quote request sent", {
-      description: `${type} for ${guests} on ${format(date, "d MMM yyyy")}. Our events team replies within one working day.`,
-      duration: 9000,
-    });
+      toast.success("Quote request sent", {
+        description: `${type} for ${guests} on ${format(date, "d MMM yyyy")}. Our events team replies within one working day.`,
+        duration: 9000,
+      });
 
-    setName("");
-    setOrganisation("");
-    setEmail("");
-    setPhone("");
-    setNotes("");
-    setEquipment([]);
+      setName("");
+      setOrganisation("");
+      setEmail("");
+      setPhone("");
+      setNotes("");
+      setEquipment([]);
+    } catch (error) {
+      toast.error("We couldn't send that", {
+        description: cleanError(
+          error,
+          `Please call ${site.phone.display} and our events team will help.`,
+        ),
+      });
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

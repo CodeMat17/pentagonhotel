@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   CalendarDaysIcon,
@@ -34,67 +34,58 @@ import {
   findReservation,
   type Reservation,
 } from "@/lib/booking";
-import { extraServices } from "@/lib/data";
+import { cleanError } from "@/lib/client";
+import type { ExtraService } from "@/lib/content";
 import { formatNaira, site, telLink } from "@/lib/site";
 
 /**
  * Retrieve a booking by reference, then modify or cancel it.
  *
- * Reservations live in localStorage today (see lib/booking.ts), so this only
- * finds bookings made in this browser. With a booking API behind
- * `findReservation`, the same screen works for any guest with their reference.
+ * The reference alone is not a key: the lookup needs the email the booking was
+ * made with, so a guessed or overheard reference reveals nothing. Both are
+ * checked server-side.
  */
-interface LookupState {
-  booking: Reservation | null;
-  searched: boolean;
-}
-
-const noopSubscribe = () => () => {};
-
-export function ManageBooking() {
+export function ManageBooking({ extraServices }: { extraServices: ExtraService[] }) {
   const params = useSearchParams();
   const deepLinkRef = params.get("ref");
   const [reference, setReference] = useState(deepLinkRef ?? "");
+  const [email, setEmail] = useState("");
 
-  /**
-   * Reservations live in the browser, so the server has nothing to render. This
-   * flips to true after hydration, at which point a `?ref=` deep link from the
-   * confirmation screen resolves itself — no post-mount setState needed.
-   */
-  const hydrated = useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
+  const [booking, setBooking] = useState<Reservation | null>(null);
+  const [searched, setSearched] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const [manual, setManual] = useState<LookupState | null>(null);
-
-  const state: LookupState =
-    manual ??
-    (hydrated && deepLinkRef
-      ? { booking: findReservation(deepLinkRef) ?? null, searched: true }
-      : { booking: null, searched: false });
-
-  const { booking, searched } = state;
-
-  const lookup = (value: string) => {
-    const found = findReservation(value) ?? null;
-    setManual({ booking: found, searched: true });
-    if (!found) {
-      toast.error("We couldn't find that booking", {
-        description: "Check the reference, or call us and we'll look it up.",
-      });
+  async function lookup() {
+    setBusy(true);
+    try {
+      const found = await findReservation(reference, email);
+      setBooking(found);
+      setSearched(true);
+      if (!found) {
+        toast.error("We couldn't find that booking", {
+          description: "Check the reference and email, or call us and we'll look it up.",
+        });
+      }
+    } catch (error) {
+      toast.error(cleanError(error, "We couldn't reach the booking system."));
+    } finally {
+      setBusy(false);
     }
-  };
+  }
 
-  function cancel() {
+  async function cancel() {
     if (!booking) return;
-    const updated = cancelReservation(booking.reference);
-    if (updated) {
-      setManual({ booking: { ...updated }, searched: true });
+    setBusy(true);
+    try {
+      await cancelReservation(booking.reference, email);
+      setBooking({ ...booking, status: "cancelled" });
       toast.success("Booking cancelled", {
-        description: `${updated.reference} has been cancelled. A confirmation email is on its way.`,
+        description: `${booking.reference} has been cancelled. A confirmation email is on its way.`,
       });
+    } catch (error) {
+      toast.error(cleanError(error, "We couldn't cancel that booking."));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -103,7 +94,7 @@ export function ManageBooking() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          lookup(reference);
+          void lookup();
         }}
         className="rounded-2xl bg-card p-6 ring-1 ring-foreground/10"
       >
@@ -111,7 +102,8 @@ export function ManageBooking() {
           Find your booking
         </Label>
         <p id="reference-hint" className="mt-1 text-sm text-muted-foreground">
-          Enter the reference from your confirmation email — it starts with PHS-.
+          Enter the reference from your confirmation email — it starts with PHS- —
+          and the email address you booked with.
         </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <Input
@@ -122,10 +114,19 @@ export function ManageBooking() {
             placeholder="PHS-XXXXXX"
             className="h-12 flex-1 font-mono tracking-wider"
           />
+          <Input
+            id="booking-email"
+            type="email"
+            value={email}
+            aria-label="Email address on the booking"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            className="h-12 flex-1"
+          />
           <Button
             type="submit"
             size="lg"
-            disabled={!reference.trim()}
+            disabled={!reference.trim() || !email.trim() || busy}
             className="h-12 bg-brand px-6 font-extrabold text-brand-foreground hover:bg-brand/90"
           >
             <SearchIcon /> Find booking
@@ -140,9 +141,9 @@ export function ManageBooking() {
               No booking with that reference
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              References are looked up on the device you booked from. If you booked
-              elsewhere, or by phone, call reception and we&apos;ll pull it up in
-              seconds.
+              The reference and email must match the booking exactly. If you booked
+              by phone, or you are not sure which address you used, call reception
+              and we&apos;ll pull it up in seconds.
             </p>
             <Button
               size="lg"

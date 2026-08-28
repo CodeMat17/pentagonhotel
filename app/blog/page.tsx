@@ -6,7 +6,7 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
 import { Badge } from "@/components/ui/badge";
-import { posts } from "@/lib/data";
+import { getPosts } from "@/lib/content";
 import { formatDateLong } from "@/lib/format";
 import { site } from "@/lib/site";
 
@@ -22,7 +22,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function BlogPage() {
+  const posts = await getPosts();
+
   return (
     <>
       <PageHeader

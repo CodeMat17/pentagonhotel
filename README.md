@@ -6,6 +6,28 @@ shadcn/ui on Base UI, Framer Motion and Nunito.
 
 The design spec this was built from is in [BLUEPRINT.md](BLUEPRINT.md).
 
+## Content comes from Convex
+
+Rooms, offers, dining, event spaces, facilities, services, reviews, FAQs, the
+gallery and the journal are all managed in the **dashboard**
+(`../pentagon-dashboard`) and stored in Convex. This site reads them through
+`lib/content.ts` and writes to the same backend when a guest books, sends an
+enquiry or joins the newsletter.
+
+Point it at the deployment by copying the URL from the dashboard's `.env.local`:
+
+```bash
+cp .env.example .env.local     # then set NEXT_PUBLIC_CONVEX_URL
+```
+
+With that variable unset, every content read falls back to the bundled copy in
+`lib/data.ts`, so the site still builds and serves — useful in CI, and a safety
+net if Convex is unreachable. Guest-facing writes have nothing to fall back to,
+so those forms tell the guest to call instead.
+
+Pages revalidate every five minutes (`revalidate = 300`), so an edit made in the
+dashboard is live within five.
+
 ## Running it
 
 ```bash
@@ -29,8 +51,11 @@ components/
   ui/                   shadcn components (Base UI primitives)
 lib/
   site.ts               NAP, contact channels, tax rates, currency formatting
-  data.ts               all content: rooms, offers, venues, dining, FAQs, posts…
-  booking.ts            pricing, availability and persistence — the backend seam
+  convex.ts             the public Convex functions this site calls, and their shapes
+  content.ts            every content read, with the bundled fallback
+  client.ts             browser-side Convex calls (bookings, enquiries, promos)
+  data.ts               type definitions + the fallback copy of all content
+  booking.ts            pricing, availability and persistence
   format.ts             hydration-safe date formatting
   nav.ts                navigation model shared by header, tray and footer
 ```

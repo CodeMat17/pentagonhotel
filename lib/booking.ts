@@ -1,15 +1,17 @@
 /**
  * Reservation domain logic — pricing, availability and persistence.
  *
- * This is the seam where a real PMS / channel manager and a payment provider
- * plug in. `checkAvailability` and `createReservation` are the only two
- * functions the UI calls, and both are already async so swapping the mock for a
- * network call changes nothing above them.
+ * Pricing is pure and runs in the browser so the summary updates as the guest
+ * types. Everything that must be authoritative — whether a promo code is real,
+ * and the reservation itself — is a Convex call, because a discount the client
+ * could invent is not a discount.
  *
  * No card data is handled here, by design.
  */
 
-import { extraServices, promoCodes, rooms, type Room } from "@/lib/data";
+import { m, q } from "@/lib/convex";
+import { runMutation, runQuery } from "@/lib/client";
+import type { ExtraService, RoomSummary } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export interface StayDetails {
@@ -48,6 +50,13 @@ export interface Reservation {
   total: number;
 }
 
+/** A promo code the server has confirmed. */
+export interface AppliedPromo {
+  code: string;
+  discount: number;
+  label: string;
+}
+
 /** Whole nights between two dates, floored at zero. */
 export function nightsBetween(from?: Date, to?: Date): number {
   if (!from || !to) return 0;
@@ -72,13 +81,15 @@ export function calculatePrice({
   nights,
   roomCount,
   extraIds,
-  promoCode,
+  extras,
+  promo,
 }: {
-  room: Room | null;
+  room: RoomSummary | null;
   nights: number;
   roomCount: number;
   extraIds: string[];
-  promoCode?: string | null;
+  extras: ExtraService[];
+  promo?: AppliedPromo | null;
 }): PriceBreakdown {
   const empty: PriceBreakdown = {
     nights,
@@ -96,13 +107,12 @@ export function calculatePrice({
   const roomSubtotal = room.rate * nights * roomCount;
 
   const extrasSubtotal = extraIds.reduce((total, id) => {
-    const extra = extraServices.find((service) => service.id === id);
+    const extra = extras.find((service) => service.id === id);
     if (!extra) return total;
     return total + (extra.unit === "night" ? extra.price * nights : extra.price);
   }, 0);
 
   // Promotions apply to accommodation only — never to extras or tax.
-  const promo = promoCode ? promoCodes[promoCode.toUpperCase()] : undefined;
   const discount = promo ? Math.round(roomSubtotal * promo.discount) : 0;
 
   const taxable = roomSubtotal - discount + extrasSubtotal;
@@ -122,9 +132,17 @@ export function calculatePrice({
   };
 }
 
-export function validatePromoCode(code: string) {
-  const promo = promoCodes[code.trim().toUpperCase()];
-  return promo ? { valid: true as const, ...promo } : { valid: false as const };
+/**
+ * Codes are never shipped to the browser — the server decides, so a guest
+ * cannot read the discount table out of the bundle or invent a code.
+ */
+export async function validatePromoCode(code: string): Promise<AppliedPromo | null> {
+  const trimmed = code.trim().toUpperCase();
+  if (!trimmed) return null;
+  const result = await runQuery(q.promo, { code: trimmed });
+  return result.valid
+    ? { code: trimmed, discount: result.discount, label: result.label }
+    : null;
 }
 
 /**
@@ -133,12 +151,14 @@ export function validatePromoCode(code: string) {
  * Deterministically derives "rooms left" from the room slug and the arrival
  * date, so the same search always returns the same answer (a random number
  * would re-roll on every render and look broken). Replace the body with a call
- * to the property management system.
+ * to the property management system — the signature already allows it to be
+ * async and to fail.
  */
 export async function checkAvailability(
   stay: Pick<StayDetails, "from" | "adults" | "children" | "rooms">,
+  rooms: RoomSummary[],
 ): Promise<Record<string, number>> {
-  await new Promise((resolve) => setTimeout(resolve, 550));
+  await new Promise((resolve) => setTimeout(resolve, 400));
 
   const dayKey = Math.floor(stay.from.getTime() / 86_400_000);
   const guests = stay.adults + stay.children;
@@ -155,65 +175,57 @@ export async function checkAvailability(
   );
 }
 
-const STORAGE_KEY = "phs.reservations";
-
-function generateReference(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  const bytes = new Uint8Array(6);
-  crypto.getRandomValues(bytes);
-  for (const byte of bytes) out += alphabet[byte % alphabet.length];
-  return `PHS-${out}`;
-}
-
-function readStore(): Reservation[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function writeStore(reservations: Reservation[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reservations));
-}
-
 /**
- * Persists the reservation and returns it with a reference.
+ * Writes the reservation to Convex and returns it with its reference.
  *
- * Today that means localStorage, which is enough to demonstrate confirmation,
- * lookup, modification and cancellation end to end. Point this at the booking
- * API — and trigger the confirmation email/SMS — when one exists.
+ * The reference is minted server-side and checked for collisions there, so two
+ * guests booking at the same instant can never share one.
  */
 export async function createReservation(
   input: Omit<Reservation, "reference" | "createdAt" | "status">,
 ): Promise<Reservation> {
-  await new Promise((resolve) => setTimeout(resolve, 900));
-  const reservation: Reservation = {
+  const { reference } = await runMutation(m.createBooking, input);
+  return {
     ...input,
-    reference: generateReference(),
+    reference,
     createdAt: new Date().toISOString(),
     status: "confirmed",
   };
-  writeStore([reservation, ...readStore()]);
-  return reservation;
 }
 
-export function findReservation(reference: string): Reservation | undefined {
-  const needle = reference.trim().toUpperCase();
-  return readStore().find((booking) => booking.reference === needle);
+/** Looks a booking up by reference *and* email — a reference alone is not a key. */
+export async function findReservation(
+  reference: string,
+  email: string,
+): Promise<Reservation | null> {
+  const booking = await runQuery(q.lookupBooking, {
+    reference: reference.trim().toUpperCase(),
+    email: email.trim(),
+  });
+  if (!booking) return null;
+
+  return {
+    reference: booking.reference,
+    createdAt: new Date(booking._creationTime).toISOString(),
+    status: booking.status === "cancelled" ? "cancelled" : "confirmed",
+    roomSlug: booking.roomSlug,
+    roomName: booking.roomName,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    nights: booking.nights,
+    adults: booking.adults,
+    children: booking.children,
+    roomCount: booking.roomCount,
+    extras: booking.extras,
+    promoCode: booking.promoCode,
+    guest: booking.guest,
+    total: booking.total,
+  };
 }
 
-export function cancelReservation(reference: string): Reservation | undefined {
-  const all = readStore();
-  const match = all.find((booking) => booking.reference === reference);
-  if (!match) return undefined;
-  match.status = "cancelled";
-  writeStore(all);
-  return match;
-}
-
-export function listReservations(): Reservation[] {
-  return readStore();
+export async function cancelReservation(reference: string, email: string) {
+  await runMutation(m.cancelBooking, {
+    reference: reference.trim().toUpperCase(),
+    email: email.trim(),
+  });
 }

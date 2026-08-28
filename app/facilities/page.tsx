@@ -7,7 +7,7 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { facilityGroups } from "@/lib/data";
+import { getFacilityGroups } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -23,7 +23,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FacilitiesPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function FacilitiesPage() {
+  const facilityGroups = await getFacilityGroups();
+
   return (
     <>
       <PageHeader

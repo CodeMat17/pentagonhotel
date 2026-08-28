@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { RoomsExplorer } from "@/components/rooms-explorer";
+import { getRooms } from "@/lib/content";
 import { Section } from "@/components/section";
 import { site } from "@/lib/site";
 
@@ -18,7 +19,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RoomsPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function RoomsPage() {
+  const rooms = await getRooms();
+
   return (
     <>
       <PageHeader
@@ -34,7 +40,7 @@ export default function RoomsPage() {
       <Section>
         {/* Keeps the heading order h1 → h2 → h3 intact above the room cards. */}
         <h2 className="sr-only">Available rooms</h2>
-        <RoomsExplorer />
+        <RoomsExplorer rooms={rooms} />
       </Section>
     </>
   );

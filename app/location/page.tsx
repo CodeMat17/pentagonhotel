@@ -11,7 +11,7 @@ import { MapEmbed } from "@/components/map-embed";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
-import { attractions } from "@/lib/data";
+import { getAttractions } from "@/lib/content";
 import { fullAddress, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -50,7 +50,12 @@ const gettingHere = [
   },
 ];
 
-export default function LocationPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function LocationPage() {
+  const attractions = await getAttractions();
+
   const categories = Array.from(
     new Set(attractions.map((place) => place.category)),
   );

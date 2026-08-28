@@ -7,7 +7,7 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { JsonLd, restaurantSchemas } from "@/components/structured-data";
-import { diningVenues } from "@/lib/data";
+import { getDiningVenues } from "@/lib/content";
 import { formatNaira, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -23,10 +23,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DiningPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function DiningPage() {
+  const diningVenues = await getDiningVenues();
+
   return (
     <>
-      <JsonLd data={restaurantSchemas} />
+      <JsonLd data={restaurantSchemas(diningVenues)} />
 
       <PageHeader
         title="Dining"
@@ -138,7 +143,7 @@ export default function DiningPage() {
           description="Walk-ins are welcome, but weekends fill after 8pm. Tell us when, and we'll call to confirm."
         />
         <Reveal delay={0.08} className="mx-auto mt-12 max-w-4xl">
-          <TableReservationForm />
+          <TableReservationForm diningVenues={diningVenues} />
         </Reveal>
       </Section>
 

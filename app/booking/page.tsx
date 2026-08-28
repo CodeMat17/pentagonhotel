@@ -5,6 +5,10 @@ import { BookingFlow } from "@/components/booking/booking-flow";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  getExtras,
+  getRooms
+} from "@/lib/content";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -21,7 +25,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BookingPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function BookingPage() {
+  const [rooms, extraServices] = await Promise.all([getRooms(), getExtras()]);
+
   return (
     <>
       <PageHeader
@@ -33,7 +42,7 @@ export default function BookingPage() {
       <Section>
         {/* useSearchParams needs a Suspense boundary to keep the route static. */}
         <Suspense fallback={<BookingSkeleton />}>
-          <BookingFlow />
+          <BookingFlow rooms={rooms} extraServices={extraServices} />
         </Suspense>
       </Section>
     </>

@@ -23,11 +23,10 @@ const nextConfig: NextConfig = {
     // AVIF first, WebP fallback — both far smaller than the source JPEGs.
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
+      // Convex storage — every photograph managed from the dashboard.
+      { protocol: "https", hostname: "*.convex.cloud", pathname: "/**" },
+      // Still allowed for the bundled fallback content in lib/data.ts.
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
     ],
     // Cache optimized variants for 30 days.
     minimumCacheTTL: 2592000,

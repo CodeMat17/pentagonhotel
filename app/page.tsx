@@ -30,13 +30,14 @@ import { Section, SectionHeading } from "@/components/section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  attractions,
-  diningVenues,
-  featuredRooms,
-  offers,
-  ratingSummary,
-  venues,
-} from "@/lib/data";
+  getAttractions,
+  getDiningVenues,
+  getFeaturedRooms,
+  getGallery,
+  getOffers,
+  getReviews,
+  getVenues
+} from "@/lib/content";
 import { formatNaira, fullAddress, site, telLink, whatsapp } from "@/lib/site";
 
 const heroImage =
@@ -78,7 +79,30 @@ const quickFacts = [
   { Icon: ShieldCheckIcon, label: "Security", value: "CCTV & manned gate" },
 ];
 
-export default function HomePage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function HomePage() {
+  // One round of parallel fetches for the whole page — the homepage touches more
+  // content types than any other route, and serialising them would show.
+  const [
+    featuredRooms,
+    offers,
+    diningVenues,
+    venues,
+    { reviews, summary: ratingSummary },
+    attractions,
+    gallery,
+  ] = await Promise.all([
+    getFeaturedRooms(),
+    getOffers(),
+    getDiningVenues(),
+    getVenues(),
+    getReviews(),
+    getAttractions(),
+    getGallery(),
+  ]);
+
   const topOffers = offers.slice(0, 3);
 
   return (
@@ -465,7 +489,7 @@ export default function HomePage() {
           description='Collected from Google, Booking.com and TripAdvisor. We publish them as written.'
         />
         <div className='mt-12'>
-          <ReviewsCarousel />
+          <ReviewsCarousel reviews={reviews} />
         </div>
       </Section>
 
@@ -486,7 +510,7 @@ export default function HomePage() {
           }
         />
         <div className='mt-12'>
-          <GalleryPreview />
+          <GalleryPreview gallery={gallery} />
         </div>
       </Section>
 

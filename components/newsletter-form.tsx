@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cleanError, runMutation } from "@/lib/client";
+import { m } from "@/lib/convex";
 
 /**
  * Newsletter signup. Includes a honeypot field and a submission-timing check —
@@ -37,12 +39,22 @@ export function NewsletterForm() {
     }
 
     setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setPending(false);
-    setEmail("");
-    toast.success("You're on the list", {
-      description: "Offers and news, roughly once a month. Never your inbox's problem.",
-    });
+    try {
+      // Re-subscribing an address already on the list is a no-op server-side,
+      // so a guest who signs up twice never sees an error.
+      await runMutation(m.subscribe, { email, source: "footer" });
+      setEmail("");
+      toast.success("You're on the list", {
+        description:
+          "Offers and news, roughly once a month. Never your inbox's problem.",
+      });
+    } catch (error) {
+      toast.error("We couldn't sign you up", {
+        description: cleanError(error, "Please try again in a moment."),
+      });
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

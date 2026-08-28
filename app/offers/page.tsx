@@ -9,7 +9,10 @@ import { Section, SectionHeading } from "@/components/section";
 import { JsonLd } from "@/components/structured-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { offers } from "@/lib/data";
+import {
+  getOffers,
+  type Offer,
+} from "@/lib/content";
 import { formatNaira, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -25,7 +28,7 @@ export const metadata: Metadata = {
   },
 };
 
-const offerSchema = {
+const offerSchema = (offers: Offer[]) => ({
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: `Offers and packages at ${site.name}`,
@@ -42,12 +45,17 @@ const offerSchema = {
       availability: "https://schema.org/InStock",
     },
   })),
-};
+});
 
-export default function OffersPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function OffersPage() {
+  const offers = await getOffers();
+
   return (
     <>
-      <JsonLd data={offerSchema} />
+      <JsonLd data={offerSchema(offers)} />
 
       <PageHeader
         title="Offers & Packages"

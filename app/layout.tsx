@@ -10,6 +10,7 @@ import {
   lodgingBusinessSchema,
   websiteSchema,
 } from "@/components/structured-data";
+import { getReviews, getRooms, getSettings } from "@/lib/content";
 import { Toaster } from "@/components/ui/sonner";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -82,7 +83,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // The hotel schema quotes live inventory and the live review average, so both
+  // come from the same content layer every page reads.
+  const [rooms, { summary }, settings] = await Promise.all([
+    getRooms(),
+    getReviews(),
+    getSettings(),
+  ]);
+
   return (
     <html
       lang="en-NG"
@@ -103,6 +112,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             Skip to main content
           </a>
 
+          {settings?.announcementActive && settings.announcement ? (
+            <p
+              role="status"
+              className="bg-brand px-4 py-2 text-center text-sm font-semibold text-brand-foreground"
+            >
+              {settings.announcement}
+            </p>
+          ) : null}
+
           <SiteHeader />
 
           {/* Bottom padding clears the fixed mobile action bar. */}
@@ -115,7 +133,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Toaster position="top-center" richColors closeButton />
         </ThemeProvider>
 
-        <JsonLd data={[lodgingBusinessSchema, websiteSchema]} />
+        <JsonLd data={[lodgingBusinessSchema(rooms, summary), websiteSchema]} />
       </body>
     </html>
   );

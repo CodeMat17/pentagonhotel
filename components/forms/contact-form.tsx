@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cleanError, runMutation } from "@/lib/client";
+import { m } from "@/lib/convex";
 import { site } from "@/lib/site";
 
 const subjects = [
@@ -58,18 +60,37 @@ export function ContactForm() {
     }
 
     setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 850));
-    setPending(false);
+    try {
+      // Lands in the dashboard inbox, where reception picks it up.
+      await runMutation(m.sendMessage, {
+        kind: "contact",
+        name,
+        email,
+        phone,
+        subject: subjects.find((item) => item.value === subject)?.label ?? "Enquiry",
+        body: message,
+        details: [],
+      });
 
-    toast.success("Message sent", {
-      description: `Thanks ${name.split(" ")[0]} — we reply within one working day, usually much sooner.`,
-      duration: 8000,
-    });
+      toast.success("Message sent", {
+        description: `Thanks ${name.split(" ")[0]} — we reply within one working day, usually much sooner.`,
+        duration: 8000,
+      });
 
-    setName("");
-    setEmail("");
-    setPhone("");
-    setMessage("");
+      setName("");
+      setEmail("");
+      setPhone("");
+      setMessage("");
+    } catch (error) {
+      toast.error("We couldn't send that", {
+        description: cleanError(
+          error,
+          `Please call ${site.phone.display} and we'll take it from there.`,
+        ),
+      });
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

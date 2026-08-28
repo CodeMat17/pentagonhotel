@@ -24,10 +24,17 @@ import { JsonLd, roomSchema } from "@/components/structured-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { getRoom, rooms } from "@/lib/data";
+import {
+  getRoom,
+  getRooms
+} from "@/lib/content";
 import { formatNaira, site, telLink, whatsappLink } from "@/lib/site";
 
-export function generateStaticParams() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const rooms = await getRooms();
   return rooms.map((room) => ({ slug: room.slug }));
 }
 
@@ -35,7 +42,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/rooms/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const room = getRoom(slug);
+  const room = await getRoom(slug);
   if (!room) return { title: "Room not found" };
 
   return {
@@ -53,11 +60,11 @@ export async function generateMetadata({
 
 export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
   const { slug } = await params;
-  const room = getRoom(slug);
+  const [room, rooms] = await Promise.all([getRoom(slug), getRooms()]);
   if (!room) notFound();
 
   const others = rooms.filter((candidate) => candidate.slug !== room.slug).slice(0, 3);
-  const schema = roomSchema(room.slug);
+  const schema = roomSchema(room);
 
   const specs = [
     { Icon: MaximizeIcon, label: "Room size", value: `${room.sizeSqm} m²` },

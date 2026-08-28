@@ -5,7 +5,10 @@ import { AwardIcon, HeartHandshakeIcon, LeafIcon, TargetIcon } from "lucide-reac
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
-import { ratingSummary } from "@/lib/data";
+import {
+  getReviews,
+  type RatingSummary,
+} from "@/lib/content";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -43,7 +46,11 @@ const values = [
   },
 ];
 
-const timeline = [
+/**
+ * The last entry quotes the live review average, so the timeline is built from
+ * the content rather than declared at module scope.
+ */
+const buildTimeline = (ratingSummary: RatingSummary) => [
   {
     year: "2016",
     title: "Ground broken on Solomon Wali Street",
@@ -99,7 +106,13 @@ const leadership = [
   },
 ];
 
-export default function AboutPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function AboutPage() {
+  const { summary: ratingSummary } = await getReviews();
+  const timeline = buildTimeline(ratingSummary);
+
   return (
     <>
       <PageHeader

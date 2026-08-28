@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { galleryImages } from "@/lib/data";
+import type { GalleryImage } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 /**
@@ -12,8 +12,14 @@ import { cn } from "@/lib/utils";
  * can least afford it. Each tile is a plain link to /gallery, which is where
  * the full interactive version lives.
  */
-export function GalleryPreview({ count = 8 }: { count?: number }) {
-  const images = galleryImages.slice(0, count);
+export function GalleryPreview({
+  gallery,
+  count = 8,
+}: {
+  gallery: GalleryImage[];
+  count?: number;
+}) {
+  const images = gallery.slice(0, count);
 
   return (
     <ul className="grid auto-rows-[10rem] grid-cols-2 gap-3 sm:auto-rows-[12rem] md:grid-cols-3 lg:grid-cols-4">

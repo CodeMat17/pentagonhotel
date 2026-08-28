@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { diningVenues } from "@/lib/data";
+import { cleanError, runMutation } from "@/lib/client";
+import { m } from "@/lib/convex";
+import type { DiningVenue } from "@/lib/content";
 import { site } from "@/lib/site";
 
 const times = [
@@ -27,11 +29,6 @@ const times = [
 
 const partySizes = Array.from({ length: 12 }, (_, index) => String(index + 1));
 
-const venueItems = diningVenues.map((venue) => ({
-  value: venue.slug,
-  label: venue.name,
-}));
-
 const timeItems = times.map((time) => ({ value: time, label: time }));
 const partyItems = partySizes.map((size) => ({
   value: size,
@@ -39,11 +36,20 @@ const partyItems = partySizes.map((size) => ({
 }));
 
 /** Table booking for the restaurants — single-date calendar, not a range. */
-export function TableReservationForm() {
+export function TableReservationForm({
+  diningVenues,
+}: {
+  diningVenues: DiningVenue[];
+}) {
   const today = startOfToday();
 
+  const venueItems = diningVenues.map((item) => ({
+    value: item.slug,
+    label: item.name,
+  }));
+
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [venue, setVenue] = useState(diningVenues[0].slug);
+  const [venue, setVenue] = useState(diningVenues[0]?.slug ?? "");
   const [time, setTime] = useState("19:00");
   const [party, setParty] = useState("2");
   const [name, setName] = useState("");
@@ -69,21 +75,45 @@ export function TableReservationForm() {
       return;
     }
 
-    setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setPending(false);
-
     const venueName =
       diningVenues.find((item) => item.slug === venue)?.name ?? "the restaurant";
 
-    toast.success("Table requested", {
-      description: `${party} at ${venueName}, ${format(date, "EEE d MMM")} at ${time}. We'll call ${phone} to confirm.`,
-      duration: 8000,
-    });
+    setPending(true);
+    try {
+      await runMutation(m.sendMessage, {
+        kind: "table-reservation",
+        name,
+        // Tables are confirmed by phone, so an email is not asked for.
+        email: "tables@pentagonhotelandsuites.com",
+        phone,
+        subject: `${party} at ${venueName}, ${format(date, "EEE d MMM")} at ${time}`,
+        body: notes || "No special requests.",
+        details: [
+          { label: "Venue", value: venueName },
+          { label: "Date", value: format(date, "yyyy-MM-dd") },
+          { label: "Time", value: time },
+          { label: "Party size", value: party },
+        ],
+      });
 
-    setName("");
-    setPhone("");
-    setNotes("");
+      toast.success("Table requested", {
+        description: `${party} at ${venueName}, ${format(date, "EEE d MMM")} at ${time}. We'll call ${phone} to confirm.`,
+        duration: 8000,
+      });
+
+      setName("");
+      setPhone("");
+      setNotes("");
+    } catch (error) {
+      toast.error("We couldn't send that", {
+        description: cleanError(
+          error,
+          `Please call ${site.phone.display} to book your table.`,
+        ),
+      });
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

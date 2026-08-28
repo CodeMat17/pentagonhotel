@@ -5,6 +5,7 @@ import { ManageBooking } from "@/components/booking/manage-booking";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getExtras } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Manage your booking",
@@ -14,7 +15,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function ManageBookingPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function ManageBookingPage() {
+  const extraServices = await getExtras();
+
   return (
     <>
       <PageHeader
@@ -29,7 +35,7 @@ export default function ManageBookingPage() {
             <Skeleton className="mx-auto h-56 w-full max-w-3xl rounded-2xl" />
           }
         >
-          <ManageBooking />
+          <ManageBooking extraServices={extraServices} />
         </Suspense>
       </Section>
     </>

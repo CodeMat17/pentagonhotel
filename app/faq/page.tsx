@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { faqCategories, faqs } from "@/lib/data";
+import { getFaqs } from "@/lib/content";
 import { site, telLink, whatsapp } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -28,10 +28,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FaqPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function FaqPage() {
+  const faqs = await getFaqs();
+  const faqCategories = Array.from(new Set(faqs.map((faq) => faq.category)));
+
   return (
     <>
-      <JsonLd data={faqSchema} />
+      <JsonLd data={faqSchema(faqs)} />
 
       <PageHeader
         title="Frequently Asked Questions"

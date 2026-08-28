@@ -7,7 +7,7 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { formatNaira, site } from "@/lib/site";
-import { venues } from "@/lib/data";
+import { getVenues } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Events & Conference Facilities",
@@ -22,7 +22,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EventsPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function EventsPage() {
+  const venues = await getVenues();
+
   return (
     <>
       <PageHeader
@@ -150,7 +155,7 @@ export default function EventsPage() {
           description="One form, everything we need to price it. Our events team replies within one working day — with availability, a layout plan and a number."
         />
         <Reveal delay={0.08} className="mx-auto mt-12 max-w-5xl">
-          <EventQuoteForm />
+          <EventQuoteForm venues={venues} />
         </Reveal>
       </Section>
 

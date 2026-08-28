@@ -19,12 +19,8 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import {
-  rooms,
-  roomCategories,
-  type BedType,
-  type RoomCategory,
-} from "@/lib/data";
+import type { BedType, RoomCategory } from "@/lib/data";
+import type { RoomSummary } from "@/lib/content";
 import { formatNaira } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +60,12 @@ const emptyFilters: Filters = {
  * All filtering is in memory over six rooms — no network, no loading state, and
  * results update the instant a control changes.
  */
-export function RoomsExplorer() {
+export function RoomsExplorer({ rooms }: { rooms: RoomSummary[] }) {
+  // Categories come from the content, in the order the dashboard defines.
+  const roomCategories = Array.from(
+    new Set(rooms.map((room) => room.category)),
+  );
+
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [sort, setSort] = useState<"recommended" | "low" | "high" | "size">(
     "recommended",
@@ -119,7 +120,7 @@ export function RoomsExplorer() {
       default:
         return matched;
     }
-  }, [filters, sort]);
+  }, [rooms, filters, sort]);
 
   const panel = (
     <div className="space-y-6">

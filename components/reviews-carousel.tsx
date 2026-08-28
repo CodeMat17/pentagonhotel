@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { reviews } from "@/lib/data";
+import type { Review } from "@/lib/data";
 import { formatMonthYear } from "@/lib/format";
 
 function Stars({ rating }: { rating: number }) {
@@ -35,7 +35,7 @@ function Stars({ rating }: { rating: number }) {
 }
 
 /** Swipeable on touch, arrow-key and button navigable on desktop. */
-export function ReviewsCarousel() {
+export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
   return (
     <Carousel
       opts={{ align: "start", loop: true }}

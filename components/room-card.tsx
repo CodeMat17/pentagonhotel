@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNaira } from "@/lib/site";
-import type { Room } from "@/lib/data";
+import type { RoomSummary } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,7 +22,7 @@ export function RoomCard({
   priority = false,
   className,
 }: {
-  room: Room;
+  room: RoomSummary;
   priority?: boolean;
   className?: string;
 }) {

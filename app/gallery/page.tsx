@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { GalleryGrid } from "@/components/gallery-grid";
+import { getGallery } from "@/lib/content";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
 import { site } from "@/lib/site";
@@ -17,7 +18,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GalleryPage() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export default async function GalleryPage() {
+  const gallery = await getGallery();
+
   return (
     <>
       <PageHeader
@@ -27,7 +33,7 @@ export default function GalleryPage() {
       />
 
       <Section>
-        <GalleryGrid />
+        <GalleryGrid gallery={gallery} />
       </Section>
     </>
   );

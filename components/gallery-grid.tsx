@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { galleryCategories, galleryImages } from "@/lib/data";
+import type { GalleryImage } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,14 +20,26 @@ import { cn } from "@/lib/utils";
  * Filtering happens client-side over a fixed list, so there is no request and no
  * loading state — the grid re-lays out immediately.
  */
-export function GalleryGrid({ limit }: { limit?: number }) {
+export function GalleryGrid({
+  gallery,
+  limit,
+}: {
+  gallery: GalleryImage[];
+  limit?: number;
+}) {
+  // Derived from the content itself, so a new category needs no code change.
+  const galleryCategories = [
+    "All",
+    ...Array.from(new Set(gallery.map((image) => image.category))),
+  ];
+
   const [category, setCategory] = useState("All");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const visible = (
     category === "All"
-      ? galleryImages
-      : galleryImages.filter((image) => image.category === category)
+      ? gallery
+      : gallery.filter((image) => image.category === category)
   ).slice(0, limit);
 
   const step = useCallback(

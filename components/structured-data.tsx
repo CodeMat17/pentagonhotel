@@ -1,5 +1,16 @@
-import { faqs, ratingSummary, rooms, diningVenues } from "@/lib/data";
+import type {
+  DiningVenue,
+  FaqItem,
+  Room,
+} from "@/lib/data";
+import type { RatingSummary, RoomSummary } from "@/lib/content";
 import { fullAddress, site } from "@/lib/site";
+
+/**
+ * Structured data is built from the live content, so it can never describe a
+ * room that has been unpublished or a rate that has changed. Each builder takes
+ * the same content the page renders.
+ */
 
 /**
  * Renders a JSON-LD block. `JSON.stringify` escapes the payload, and we
@@ -27,67 +38,72 @@ const postalAddress = {
 };
 
 /** The property itself — the anchor every other entity references. */
-export const lodgingBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "Hotel",
-  "@id": `${site.url}/#hotel`,
-  name: site.name,
-  description: site.description,
-  url: site.url,
-  telephone: site.phone.intl,
-  email: site.email.reservations,
-  address: postalAddress,
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: site.geo.latitude,
-    longitude: site.geo.longitude,
-  },
-  hasMap: `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}`,
-  priceRange: "₦₦",
-  currenciesAccepted: "NGN",
-  paymentAccepted: "Cash, Credit Card, Bank Transfer, Online Payment",
-  checkinTime: site.checkIn,
-  checkoutTime: site.checkOut,
-  starRating: { "@type": "Rating", ratingValue: 4 },
-  petsAllowed: false,
-  smokingAllowed: false,
-  numberOfRooms: rooms.reduce((total, room) => total + room.inventory, 0),
-  sameAs: [site.social.instagram, site.social.facebook, site.social.x],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: ratingSummary.value,
-    reviewCount: ratingSummary.count,
-    bestRating: ratingSummary.best,
-  },
-  amenityFeature: [
-    "Free Wi-Fi",
-    "Outdoor swimming pool",
-    "Fitness centre",
-    "Spa",
-    "Restaurant",
-    "Bar",
-    "Free parking",
-    "Airport shuttle",
-    "24-hour front desk",
-    "Room service",
-    "Business centre",
-    "Conference facilities",
-    "Backup power",
-    "Wheelchair accessible",
-  ].map((name) => ({
-    "@type": "LocationFeatureSpecification",
-    name,
-    value: true,
-  })),
-  makesOffer: rooms.map((room) => ({
-    "@type": "Offer",
-    name: room.name,
-    price: room.rate,
-    priceCurrency: "NGN",
-    url: `${site.url}/rooms/${room.slug}`,
-    availability: "https://schema.org/InStock",
-  })),
-};
+export function lodgingBusinessSchema(
+  rooms: RoomSummary[],
+  ratingSummary: RatingSummary,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Hotel",
+    "@id": `${site.url}/#hotel`,
+    name: site.name,
+    description: site.description,
+    url: site.url,
+    telephone: site.phone.intl,
+    email: site.email.reservations,
+    address: postalAddress,
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: site.geo.latitude,
+      longitude: site.geo.longitude,
+    },
+    hasMap: `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}`,
+    priceRange: "₦₦",
+    currenciesAccepted: "NGN",
+    paymentAccepted: "Cash, Credit Card, Bank Transfer, Online Payment",
+    checkinTime: site.checkIn,
+    checkoutTime: site.checkOut,
+    starRating: { "@type": "Rating", ratingValue: 4 },
+    petsAllowed: false,
+    smokingAllowed: false,
+    numberOfRooms: rooms.reduce((total, room) => total + room.inventory, 0),
+    sameAs: [site.social.instagram, site.social.facebook, site.social.x],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: ratingSummary.value,
+      reviewCount: ratingSummary.count,
+      bestRating: ratingSummary.best,
+    },
+    amenityFeature: [
+      "Free Wi-Fi",
+      "Outdoor swimming pool",
+      "Fitness centre",
+      "Spa",
+      "Restaurant",
+      "Bar",
+      "Free parking",
+      "Airport shuttle",
+      "24-hour front desk",
+      "Room service",
+      "Business centre",
+      "Conference facilities",
+      "Backup power",
+      "Wheelchair accessible",
+    ].map((name) => ({
+      "@type": "LocationFeatureSpecification",
+      name,
+      value: true,
+    })),
+    makesOffer: rooms.map((room) => ({
+      "@type": "Offer",
+      name: room.name,
+      price: room.rate,
+      priceCurrency: "NGN",
+      url: `${site.url}/rooms/${room.slug}`,
+      availability: "https://schema.org/InStock",
+    })),
+  };
+}
 
 export const websiteSchema = {
   "@context": "https://schema.org",
@@ -104,28 +120,32 @@ export const websiteSchema = {
   },
 };
 
-export const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
-    "@type": "Question",
-    name: faq.question,
-    acceptedAnswer: { "@type": "Answer", text: faq.answer },
-  })),
-};
+export function faqSchema(faqs: FaqItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+}
 
-export const restaurantSchemas = diningVenues.map((venue) => ({
-  "@context": "https://schema.org",
-  "@type": "Restaurant",
-  name: venue.name,
-  servesCuisine: venue.cuisine,
-  description: venue.description,
-  address: postalAddress,
-  telephone: site.phone.intl,
-  url: `${site.url}/dining#${venue.slug}`,
-  priceRange: "₦₦",
-  containedInPlace: { "@id": `${site.url}/#hotel` },
-}));
+export function restaurantSchemas(diningVenues: DiningVenue[]) {
+  return diningVenues.map((venue) => ({
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: venue.name,
+    servesCuisine: venue.cuisine,
+    description: venue.description,
+    address: postalAddress,
+    telephone: site.phone.intl,
+    url: `${site.url}/dining#${venue.slug}`,
+    priceRange: "₦₦",
+    containedInPlace: { "@id": `${site.url}/#hotel` },
+  }));
+}
 
 export function breadcrumbSchema(trail: { name: string; href: string }[]) {
   return {
@@ -140,9 +160,7 @@ export function breadcrumbSchema(trail: { name: string; href: string }[]) {
   };
 }
 
-export function roomSchema(slug: string) {
-  const room = rooms.find((candidate) => candidate.slug === slug);
-  if (!room) return null;
+export function roomSchema(room: Room) {
   return {
     "@context": "https://schema.org",
     "@type": "HotelRoom",

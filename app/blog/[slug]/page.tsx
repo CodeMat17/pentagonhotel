@@ -10,11 +10,18 @@ import { Section } from "@/components/section";
 import { JsonLd } from "@/components/structured-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPost, posts } from "@/lib/data";
+import {
+  getPost,
+  getPosts
+} from "@/lib/content";
 import { formatDateLong } from "@/lib/format";
 import { site } from "@/lib/site";
 
-export function generateStaticParams() {
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const posts = await getPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
@@ -22,7 +29,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/blog/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await getPost(slug);
   if (!post) return { title: "Post not found" };
 
   return {
@@ -42,7 +49,7 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PageProps<"/blog/[slug]">) {
   const { slug } = await params;
-  const post = getPost(slug);
+  const [post, posts] = await Promise.all([getPost(slug), getPosts()]);
   if (!post) notFound();
 
   const others = posts.filter((candidate) => candidate.slug !== post.slug).slice(0, 2);

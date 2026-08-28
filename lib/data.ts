@@ -1,8 +1,15 @@
 /**
- * Content layer for the whole site.
+ * Fallback content, and the type definitions the whole site shares.
  *
- * Every page and every JSON-LD block reads from here, so swapping in a CMS or a
- * PMS later means replacing these exported functions — not the UI.
+ * The live content now comes from Convex — see `lib/content.ts`, which every
+ * page reads through. This file stays for two reasons:
+ *
+ * 1. It defines the interfaces (`Room`, `Offer`, `Post`, …) that the Convex
+ *    documents are mapped into, so components never see backend shapes.
+ * 2. It is the safety net: with no `NEXT_PUBLIC_CONVEX_URL`, or during a Convex
+ *    outage, `lib/content.ts` serves this copy instead of failing the render.
+ *
+ * Edit the real content in the dashboard, not here.
  *
  * NOTE ON IMAGERY: the `src` values point at Unsplash and are stand-ins for the
  * hotel's own photography. Replace them with real assets (ideally local files in

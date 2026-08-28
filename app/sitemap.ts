@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { posts, rooms } from "@/lib/data";
+import { getPosts, getRooms } from "@/lib/content";
 import { site } from "@/lib/site";
 
 /** Static routes, with priority reflecting how much each drives bookings. */
@@ -28,8 +28,10 @@ const staticRoutes: {
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  // The sitemap lists exactly what is published right now.
+  const [rooms, posts] = await Promise.all([getRooms(), getPosts()]);
 
   return [
     ...staticRoutes.map((route) => ({
