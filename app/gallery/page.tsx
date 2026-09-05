@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Photos of the rooms, suites, restaurant, bar, pool, gym, conference hall and the streets around Pentagon Hotel and Suites in Choba, Port Harcourt.",
+    "Photos of the rooms, suites, restaurant, bar, pool, gym, conference hall and the streets around Pentagon International Hotel & Suites in Choba, Port Harcourt.",
   alternates: { canonical: "/gallery" },
   openGraph: {
     title: `Gallery · ${site.name}`,

@@ -39,9 +39,7 @@ import {
   getVenues
 } from "@/lib/content";
 import { formatNaira, fullAddress, site, telLink, whatsapp } from "@/lib/site";
-
-const heroImage =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=75&w=1600";
+import heroImage from "@/public/hero-bg-2.webp";
 
 /** The five sides of the Pentagon — the brand promise, made concrete. */
 const pillars = [
@@ -112,11 +110,13 @@ export default async function HomePage() {
         <div className='absolute inset-0 -z-20 overflow-hidden'>
           <Image
             src={heroImage}
-            alt='A made-up guest room at Pentagon Hotel and Suites, lit warmly at dusk'
+            alt='A made-up guest room at Pentagon International Hotel & Suites, lit warmly at dusk'
             fill
             priority
             fetchPriority='high'
             sizes='100vw'
+            quality={70}
+            placeholder='blur'
             className='ken-burns object-cover'
           />
         </div>
@@ -158,6 +158,7 @@ export default async function HomePage() {
                 Pentagon
                 <BrushUnderline delay={0.75} />
               </span>,
+              "International",
               "Hotel",
               <span key='amp' className='text-[#EBC98A]'>
                 &amp;
@@ -579,7 +580,7 @@ export default async function HomePage() {
                 Ready when you are
               </p>
               <h2 className='display mt-4 text-3xl sm:text-4xl lg:text-5xl'>
-                Two minutes to book. No account, no deposit.
+                Two minutes to book. No account, no payment online.
               </h2>
               <p className='mt-5 max-w-xl text-base leading-relaxed opacity-80'>
                 Reception is staffed 24 hours, so a late arrival is never a

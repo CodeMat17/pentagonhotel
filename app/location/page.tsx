@@ -17,7 +17,7 @@ import { fullAddress, site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Location & Directions",
   description:
-    "Pentagon Hotel and Suites is at 1 Solomon Wali Street, Owhipa Choba, Port Harcourt — 1.2km from UNIPORT and 22km from Port Harcourt International Airport.",
+    "Pentagon International Hotel & Suites is at 1 Solomon Wali Street, Owhipa Choba, Port Harcourt — 1.2km from UNIPORT and 22km from Port Harcourt International Airport.",
   alternates: { canonical: "/location" },
   openGraph: {
     title: `Location & Directions · ${site.name}`,
@@ -46,7 +46,7 @@ const gettingHere = [
   {
     Icon: CompassIcon,
     title: "GPS",
-    body: `${site.geo.latitude}° N, ${site.geo.longitude}° E. Search "Pentagon Hotel and Suites Choba" — we're on Google Maps with the correct pin, which is not something every hotel on this road can say.`,
+    body: `${site.geo.latitude}° N, ${site.geo.longitude}° E. Search "Pentagon International Hotel & Suites Choba" — we're on Google Maps with the correct pin, which is not something every hotel on this road can say.`,
   },
 ];
 

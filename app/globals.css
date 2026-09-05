@@ -252,3 +252,97 @@
 .animate-scroll-cue {
   animation: scroll-cue 2s ease-in-out infinite;
 }
+
+/* --------------------------------------------------------------- printing
+ *
+ * Only the receipt on /manage-booking is worth paper. It is portalled to
+ * <body>, so hiding body's other children removes both the chrome and the
+ * height it occupied — hiding it in place with `visibility` left the page flow
+ * behind and printed two blank sheets after the receipt.
+ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #fff;
+    color: #000;
+  }
+
+  body > *:not(#booking-receipt) {
+    display: none !important;
+  }
+
+  #booking-receipt {
+    display: block !important;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  #booking-receipt header {
+    display: flex;
+    align-items: center;
+    gap: 10pt;
+  }
+
+  #booking-receipt .receipt-logo {
+    width: 34pt;
+    height: 34pt;
+    flex: none;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #booking-receipt h2 {
+    font-size: 15pt;
+    font-weight: 800;
+  }
+
+  #booking-receipt header p {
+    font-size: 9pt;
+  }
+
+  #booking-receipt h3 {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #000;
+    font-size: 12pt;
+    font-weight: 700;
+  }
+
+  #booking-receipt table {
+    width: 100%;
+    margin-top: 0.5rem;
+    border-collapse: collapse;
+  }
+
+  #booking-receipt th,
+  #booking-receipt td {
+    padding: 3pt 0;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd;
+  }
+
+  #booking-receipt th {
+    width: 34%;
+    font-weight: 700;
+  }
+
+  #booking-receipt > p:last-child {
+    margin-top: 0.6rem;
+    font-size: 8.5pt;
+  }
+
+  /* One sheet, always: nothing here may spill onto a second page. */
+  #booking-receipt,
+  #booking-receipt * {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

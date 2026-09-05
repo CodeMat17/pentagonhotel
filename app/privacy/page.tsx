@@ -7,7 +7,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Pentagon Hotel and Suites collects, uses and protects your personal data, in line with the Nigeria Data Protection Act 2023.",
+    "How Pentagon International Hotel & Suites collects, uses and protects your personal data, in line with the Nigeria Data Protection Act 2023.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -77,10 +77,10 @@ export default function PrivacyPage() {
               What we do not collect
             </h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              We never store card details. Online payments on this website are
-              handled entirely by our PCI-compliant payment provider, and no card
-              number ever reaches our servers; payments made at the hotel go
-              through a PCI-compliant terminal or by bank transfer. We do not run advertising
+              We never collect or store card details. This website takes no payment at
+              all — reservations are settled at the hotel, through a PCI-compliant
+              terminal or by bank transfer — so no card number ever reaches our
+              servers or passes through this site. We do not run advertising
               trackers, and we do not sell or share your data with data brokers.
             </p>
           </section>

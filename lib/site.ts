@@ -5,12 +5,14 @@
  */
 
 export const site = {
-  name: "Pentagon Hotel and Suites",
-  shortName: "Pentagon Hotel",
+  name: "Pentagon International Hotel & Suites",
+  /** For the home-screen icon label and short aria-labels, where the full
+   * legal name would be truncated anyway. */
+  shortName: "Pentagon International",
   tagline: "Refined comfort in the heart of Choba",
   description:
-    "Pentagon Hotel and Suites offers refined rooms and suites, all-day dining, conference and event spaces in Owhipa Choba, Port Harcourt. Book direct for the best rate.",
-  url: "https://pentagonhotelandsuites.com",
+    "Pentagon International Hotel & Suites offers refined rooms and suites, all-day dining, conference and event spaces in Owhipa Choba, Port Harcourt. Book direct for the best rate.",
+  url: "https://pentagoninternationalhotel.com",
   locale: "en_NG",
   currency: "NGN",
   address: {
@@ -30,19 +32,40 @@ export const site = {
     e164: "2348033833628",
   },
   email: {
-    general: "hello@pentagonhotelandsuites.com",
-    reservations: "reservations@pentagonhotelandsuites.com",
-    events: "events@pentagonhotelandsuites.com",
+    general: "info@pentagoninternationalhotel.com",
+    reservations: "info@pentagoninternationalhotel.com",
+    events: "info@pentagoninternationalhotel.com",
   },
   checkIn: "14:00",
   checkOut: "12:00",
   social: {
-    instagram: "https://instagram.com/pentagonhotelandsuites",
-    facebook: "https://facebook.com/pentagonhotelandsuites",
+    instagram: "https://instagram.com/pentagoninternationalhotel",
+    facebook: "https://facebook.com/pentagoninternationalhotel",
     x: "https://x.com/pentagonhotelng",
   },
   /** Rivers State occupancy/consumption tax plus the house service charge. */
   tax: { vatRate: 0.075, serviceRate: 0.05 },
+
+  /**
+   * Reservations are free to make and settled at the hotel, so the *hold* is
+   * what the guest is really agreeing to. Everything here is stated before the
+   * guest confirms, repeated in the confirmation email, and shown again on their
+   * reservation page — a policy a guest only meets when it is enforced is not a
+   * policy, it is a complaint waiting to happen.
+   *
+   * The hotel can override the wording and the hour from the dashboard; these
+   * are the fallbacks when no settings row has been saved.
+   */
+  reservation: {
+    holdUntilTime: "20:00",
+    payment: "Pay at hotel",
+    noPaymentNotice:
+      "No payment is required to make this reservation. Your room is held according to our reservation and cancellation policy, and you settle at the hotel.",
+    cancellation:
+      "Cancel free of charge up to 24 hours before your arrival date. Inside 24 hours, one night may be charged.",
+    noShow:
+      "Your room is held until 20:00 on your arrival date. If you have not arrived or contacted us by then, the reservation is released and the room offered to other guests. Call or WhatsApp us any time if you are running late — we will hold it for you.",
+  },
 } as const;
 
 export const fullAddress = `${site.address.street}, ${site.address.area}, ${site.address.city}, ${site.address.state}, ${site.address.country}`;

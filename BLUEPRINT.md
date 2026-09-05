@@ -1,4 +1,4 @@
-# Pentagon Hotel & Suites — Website Blueprint
+# Pentagon International Hotel & Suites — Website Blueprint
 
 > The build spec. Written first, built from.
 
@@ -8,9 +8,10 @@
 
 | | |
 |---|---|
-| **Name** | Pentagon Hotel and Suites |
+| **Name** | Pentagon International Hotel & Suites |
 | **Address** | 1 Solomon Wali Street, Owhipa Choba, Port Harcourt, Rivers State, Nigeria |
 | **Phone / WhatsApp** | 08033833628 (+234 803 383 3628) |
+| **Domain / email** | pentagoninternationalhotel.com · info@pentagoninternationalhotel.com |
 | **Positioning** | Refined comfort in Choba — five sides to one promise: Comfort, Cuisine, Care, Connectivity, Celebration |
 | **Voice** | Warm, confident, unfussy. Nigerian hospitality without the hard sell. |
 
@@ -45,7 +46,8 @@
 /contact              Contact form + every channel
 /accessibility        Accessibility statement + accessible facilities
 /booking              Multi-step reservation flow
-/manage-booking       Look up / modify / cancel by reference
+/manage-booking       Look up / modify / cancel by reference + email or phone
+/reservation/[ref]    One guest's reservation — the link sent by WhatsApp
 /blog, /blog/[slug]   Journal
 /privacy /terms       Legal
 not-found             404
@@ -72,18 +74,35 @@ Four steps, resumable, entirely usable on a phone.
 3. **Extras & Details** — add-ons (airport pickup, breakfast, late checkout, spa),
    promo code, guest information, special requests.
 4. **Review & Confirm** — full breakdown (room × nights, extras, 7.5% VAT, 5% service
-   charge), policy acknowledgement, confirmation with reference `PHS-XXXXXX`, stored
-   locally so `/manage-booking` can retrieve, modify and cancel it.
+   charge), the pay-at-hotel notice, the hold policy stated in full, policy
+   acknowledgement, then confirmation with reference `PHS-XXXXXX`.
 
 Persistent booking summary (desktop rail, mobile sticky bar). Sonner toasts on every
 state change. Skeletons during the availability check.
 
-> **Payment**: the flow is checkout-complete but ends at a clearly-labelled
-> "pay on arrival / pay by transfer" confirmation. No card data is collected or stored
-> anywhere in this codebase. A PSP (Paystack/Flutterwave) drops into
-> `createReservation()` in `lib/booking.ts` once credentials exist.
+> **Payment**: there is none, by design. Pentagon takes no card on this site and
+> holds no PSP account here — a reservation is a room held against a name and
+> settled at the desk. That makes the *hold* the load-bearing rule: the room is
+> kept until a stated hour on the arrival date, after which an unclaimed and
+> uncommunicated reservation becomes a **no-show** and the room is released. The
+> hour, the wording and the reminder switches all live in the dashboard settings.
 
----
+### Confirmation & reminders
+
+The moment a reservation commits, Convex schedules two messages — neither can
+fail the booking, both are logged onto it:
+
+- **Email (Resend)** — the whole booking. The official document.
+- **WhatsApp (Meta Cloud API)** — four lines and a link. The receipt.
+
+The link goes to `/reservation/PHS-XXXXXX`: a private, `noindex`, uncached page
+carrying the stay, the hotel's details, the policies, Add to Calendar, and
+directions. A phone number is mandatory at booking; an email address is pressed
+for but never required, so a guest who does not use email still gets a booking
+they can open.
+
+An hourly Convex cron sends the day-before reminder (from 18:00) and the
+arrival-day welcome (from 09:00), and releases every hold that has expired.
 
 ## 4. Data Model (`lib/data.ts`)
 
@@ -132,6 +151,8 @@ linked from the footer.
 ## 9. Deferred (documented, not built)
 
 Multilingual routing, live currency conversion, loyalty programme, guest accounts,
-real PMS/channel-manager availability, live payment capture. Each needs a backend and
-credentials; the UI contracts they plug into are isolated in `lib/booking.ts` and
-`lib/data.ts`.
+real PMS/channel-manager availability. Each needs a backend and credentials; the
+UI contracts they plug into are isolated in `lib/booking.ts` and `lib/data.ts`.
+
+Online payment is **not** deferred — it is a decision. The hotel takes payment at
+the desk, and the site is built around that rather than around a missing PSP.

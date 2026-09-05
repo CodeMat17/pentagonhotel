@@ -19,7 +19,7 @@ import { site, telLink, whatsapp } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
   description:
-    "Check-in times, cancellation policy, parking, Wi-Fi, airport distance, children, accessibility and payment — answered for Pentagon Hotel and Suites, Choba.",
+    "Check-in times, cancellation policy, parking, Wi-Fi, airport distance, children, accessibility and payment — answered for Pentagon International Hotel & Suites, Choba.",
   alternates: { canonical: "/faq" },
   openGraph: {
     title: `FAQ · ${site.name}`,

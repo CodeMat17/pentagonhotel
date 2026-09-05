@@ -18,7 +18,7 @@ import { formatNaira, site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Offers & Packages",
   description:
-    "Weekend escapes, business-week rates, honeymoon and family packages, long-stay and early-booking discounts at Pentagon Hotel and Suites, Port Harcourt.",
+    "Weekend escapes, business-week rates, honeymoon and family packages, long-stay and early-booking discounts at Pentagon International Hotel & Suites, Port Harcourt.",
   alternates: { canonical: "/offers" },
   openGraph: {
     title: `Offers & Packages · ${site.name}`,

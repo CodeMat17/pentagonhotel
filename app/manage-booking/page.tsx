@@ -10,7 +10,7 @@ import { getExtras } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Manage your booking",
   description:
-    "Look up, change or cancel a reservation at Pentagon Hotel and Suites using your booking reference.",
+    "Look up, change or cancel a reservation at Pentagon International Hotel & Suites using your booking reference.",
   alternates: { canonical: "/manage-booking" },
   robots: { index: false, follow: true },
 };

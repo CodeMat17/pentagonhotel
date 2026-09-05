@@ -14,7 +14,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "About the hotel",
   description:
-    "Pentagon Hotel and Suites in Owhipa Choba — a purpose-built hotel in Port Harcourt, what we stand for, and the standards we hold ourselves to.",
+    "Pentagon International Hotel & Suites in Owhipa Choba — a purpose-built hotel in Port Harcourt, what we stand for, and the standards we hold ourselves to.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: `About · ${site.name}`,
@@ -116,7 +116,7 @@ export default async function AboutPage() {
   return (
     <>
       <PageHeader
-        title="About Pentagon Hotel and Suites"
+        title="About Pentagon International Hotel & Suites"
         description="A purpose-built hotel in Owhipa Choba, Port Harcourt. Sixty-four rooms, three dining venues, four event spaces, and a standard of comfort and service designed to hold up on every stay."
         crumbs={[{ name: "About", href: "/about" }]}
         image={{
@@ -131,7 +131,7 @@ export default async function AboutPage() {
             <SectionHeading
               eyebrow="Our story"
               title="Built for Port Harcourt, from the ground up"
-              description="Pentagon Hotel and Suites was designed and built as a hotel — not adapted into one. Every floor, every room and every service area was planned around how guests actually use a hotel in Choba."
+              description="Pentagon International Hotel & Suites was designed and built as a hotel — not adapted into one. Every floor, every room and every service area was planned around how guests actually use a hotel in Choba."
             />
             <div className="mt-6 space-y-4 leading-relaxed text-muted-foreground">
               <p>
@@ -159,7 +159,7 @@ export default async function AboutPage() {
           <Reveal delay={0.06} className="relative aspect-[4/5] overflow-hidden rounded-3xl">
             <Image
               src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&q=80&w=1200"
-              alt="The exterior of Pentagon Hotel and Suites at dusk"
+              alt="The exterior of Pentagon International Hotel & Suites at dusk"
               fill
               loading="lazy"
               sizes="(max-width: 1024px) 100vw, 50vw"

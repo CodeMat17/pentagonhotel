@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     "hotels near University of Port Harcourt",
     "conference hotel Port Harcourt",
     "wedding venue Port Harcourt",
-    "Pentagon Hotel and Suites",
+    "Pentagon International Hotel & Suites",
     "hotel near UNIPORT",
     "Owhipa Choba hotel",
   ],

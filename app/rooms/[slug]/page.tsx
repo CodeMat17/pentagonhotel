@@ -176,8 +176,8 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                 <div className="flex flex-wrap gap-x-2">
                   <dt className="font-bold">Payment:</dt>
                   <dd className="text-muted-foreground">
-                    No deposit required. Pay online when you book, or settle by
-                    card, transfer or cash at the hotel.
+                    Nothing to pay to reserve. Settle at the hotel by card,
+                    transfer or cash when you arrive.
                   </dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2">
@@ -229,7 +229,7 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckIcon className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
-                  No deposit — pay online securely or at the hotel
+                  No payment online — reserve now, pay at the hotel
                 </li>
                 <li className="flex items-start gap-2.5">
                   <ClockIcon className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />

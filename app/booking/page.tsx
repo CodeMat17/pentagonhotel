@@ -14,13 +14,13 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Book a room",
   description:
-    "Check live availability and book direct at Pentagon Hotel and Suites, Choba, Port Harcourt. Best rate guaranteed, no deposit, free cancellation on most rates.",
+    "Reserve a room at Pentagon International Hotel & Suites, Choba, Port Harcourt. No online payment — reserve in two minutes and pay at the hotel. Best rate guaranteed when you book direct.",
   alternates: { canonical: "/booking" },
   robots: { index: true, follow: true },
   openGraph: {
     title: `Book a room · ${site.name}`,
     description:
-      "Two minutes, no account, no deposit. Best rate guaranteed when you book direct.",
+      "Two minutes, no account, no payment online. Reserve now, pay at the hotel.",
     url: `${site.url}/booking`,
   },
 };
@@ -35,7 +35,7 @@ export default async function BookingPage() {
     <>
       <PageHeader
         title="Book your stay"
-        description="Two minutes, no account, no deposit. Cancel free on most rates, and pay online or at the hotel."
+        description="Two minutes, no account, no payment. Reserve online and settle at the hotel when you arrive."
         crumbs={[{ name: "Book", href: "/booking" }]}
       />
 

@@ -84,7 +84,7 @@ export function TableReservationForm({
         kind: "table-reservation",
         name,
         // Tables are confirmed by phone, so an email is not asked for.
-        email: "tables@pentagonhotelandsuites.com",
+        email: "info@pentagoninternationalhotel.com",
         phone,
         subject: `${party} at ${venueName}, ${format(date, "EEE d MMM")} at ${time}`,
         body: notes || "No special requests.",

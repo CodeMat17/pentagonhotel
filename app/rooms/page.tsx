@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Rooms & Suites",
   description:
-    "Eight room types at Pentagon Hotel and Suites, Choba — from the Standard Queen Room at ₦20,000 to the Executive Spring Suite. Every room has 24-hour power, fibre Wi-Fi and air conditioning.",
+    "Eight room types at Pentagon International Hotel & Suites, Choba — from the Standard Queen Room at ₦20,000 to the Executive Spring Suite. Every room has 24-hour power, fibre Wi-Fi and air conditioning.",
   alternates: { canonical: "/rooms" },
   openGraph: {
     title: `Rooms & Suites · ${site.name}`,

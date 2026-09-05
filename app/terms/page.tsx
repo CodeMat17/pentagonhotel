@@ -7,7 +7,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Terms & Conditions",
   description:
-    "Booking terms, cancellation and refund policy, house rules and payment terms for Pentagon Hotel and Suites, Owhipa Choba, Port Harcourt.",
+    "Booking terms, cancellation and refund policy, house rules and payment terms for Pentagon International Hotel & Suites, Owhipa Choba, Port Harcourt.",
   alternates: { canonical: "/terms" },
 };
 
@@ -28,6 +28,7 @@ export default function TermsPage() {
             <h2 className="font-heading text-2xl font-extrabold">Booking terms</h2>
             <ul className="mt-3 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
               <li>A booking is confirmed when you receive a reference beginning PHS-. Until then, no room is held.</li>
+              <li>No payment is taken to make a reservation. The room is held against your name until {site.reservation.holdUntilTime} on your arrival date; if you have neither arrived nor contacted us by then it is treated as a no-show and released.</li>
               <li>Rates are quoted per room per night in Nigerian naira and exclude {Math.round(site.tax.vatRate * 100)}% VAT and a {Math.round(site.tax.serviceRate * 100)}% service charge unless stated otherwise.</li>
               <li>The lead guest must be 18 or over and present government-issued photo ID at check-in.</li>
               <li>Room allocation requests (floor, view, connecting rooms) are noted and honoured where possible, but are not guaranteed.</li>
@@ -71,7 +72,8 @@ export default function TermsPage() {
             </div>
             <ul className="mt-4 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
               <li>Cancel inside the window and one night&apos;s accommodation is charged.</li>
-              <li>No-shows are charged one night and the remaining nights are released.</li>
+              <li>Your room is held until {site.reservation.holdUntilTime} on the arrival date. Tell us you are arriving later — by phone, WhatsApp or email, at any hour — and we hold it for as long as you need.</li>
+              <li>A no-show is a reservation where the guest neither arrives nor makes contact by the hold time. The reservation is released, the room offered to other guests, and one night may be charged.</li>
               <li>Early departure is charged for the nights booked unless we can re-let the room.</li>
               <li>Cancel through Manage Booking, by phone, by WhatsApp or by email — all four count, and we confirm each in writing.</li>
             </ul>
@@ -91,8 +93,8 @@ export default function TermsPage() {
           <section id="payment" className="scroll-mt-28">
             <h2 className="font-heading text-2xl font-extrabold">Payment</h2>
             <ul className="mt-3 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
-              <li>You can pay online on this website through our secure payment provider, or by card, bank transfer or cash at the hotel. No deposit is required for standard bookings.</li>
-              <li>Card details entered online are processed by our PCI-compliant payment provider and are never stored by us. We never ask for card details by email or over the phone. If anyone asks you for them in our name that way, it is not us — call {site.phone.display} and tell us.</li>
+              <li>There is no online payment. Reserve on this website and settle at the hotel by card, bank transfer or cash. No deposit is required for standard bookings.</li>
+              <li>We collect no card details anywhere on this website, and we never ask for them by email or over the phone. If anyone asks you for them in our name that way, it is not us — call {site.phone.display} and tell us.</li>
               <li>A pre-authorisation of ₦25,000 per room may be taken at check-in against incidentals, and is released at checkout.</li>
               <li>Corporate accounts may be invoiced monthly on 30-day terms by prior arrangement.</li>
             </ul>

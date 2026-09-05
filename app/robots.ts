@@ -8,8 +8,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Personal booking lookups have no business in an index.
-        disallow: ["/manage-booking"],
+        // One guest's reservation, and the form that finds it. Neither has any
+        // business in an index — /reservation/* is a private page whose URL is
+        // its own credential.
+        disallow: ["/manage-booking", "/reservation/"],
       },
     ],
     sitemap: `${site.url}/sitemap.xml`,

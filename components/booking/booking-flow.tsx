@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { addDays, format, parseISO, startOfToday } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
@@ -12,13 +12,15 @@ import {
   BedDoubleIcon,
   CalendarDaysIcon,
   CheckIcon,
-  CircleAlertIcon,
+  ClockIcon,
   CopyIcon,
   LoaderCircleIcon,
   MaximizeIcon,
   PartyPopperIcon,
+  PencilLineIcon,
   TagIcon,
   UsersIcon,
+  WalletIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,11 +34,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AMEND_STASH_KEY,
   calculatePrice,
   checkAvailability,
   createReservation,
   nightsBetween,
   validatePromoCode,
+  type AmendStash,
   type AppliedPromo,
   type GuestDetails,
   type Reservation,
@@ -68,6 +72,26 @@ const emptyGuest: GuestDetails = {
   arrivalTime: "",
 };
 
+/**
+ * Guest details for an amendment travel in session storage rather than the
+ * query string — see `AMEND_STASH_KEY` — so a name, phone and email never end
+ * up in history, in a shared link or in a referrer.
+ *
+ * A missing or stale stash is not an error: the guest simply fills the fields
+ * in again.
+ */
+function readAmendStash(reference: string | null): GuestDetails {
+  if (!reference || typeof window === "undefined") return emptyGuest;
+  try {
+    const raw = sessionStorage.getItem(AMEND_STASH_KEY);
+    if (!raw) return emptyGuest;
+    const stash = JSON.parse(raw) as AmendStash;
+    return stash.reference === reference ? { ...emptyGuest, ...stash.guest } : emptyGuest;
+  } catch {
+    return emptyGuest;
+  }
+}
+
 export function BookingFlow({
   rooms,
   extraServices,
@@ -77,6 +101,13 @@ export function BookingFlow({
 }) {
   const params = useSearchParams();
   const today = startOfToday();
+
+  /**
+   * Set when the guest came from "Change dates or room" on an existing booking.
+   * Everything they already told us is carried over, so they only have to touch
+   * what is actually changing.
+   */
+  const amendRef = params.get("amend");
 
   const [step, setStep] = useState(0);
 
@@ -106,17 +137,39 @@ export function BookingFlow({
   const [checking, setChecking] = useState(false);
 
   // ------------------------------------------------------------- extras
-  const [extraIds, setExtraIds] = useState<string[]>([]);
-  const [promoInput, setPromoInput] = useState("");
+  const [extraIds, setExtraIds] = useState<string[]>(
+    () => params.get("extras")?.split(",").filter(Boolean) ?? [],
+  );
+  const [promoInput, setPromoInput] = useState(() => params.get("promo") ?? "");
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
-  const [guest, setGuest] = useState<GuestDetails>(emptyGuest);
+  const [guest, setGuest] = useState<GuestDetails>(() => readAmendStash(amendRef));
   const [errors, setErrors] = useState<Partial<Record<keyof GuestDetails, string>>>({});
   const [agreed, setAgreed] = useState(false);
 
   // -------------------------------------------------------- confirmation
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<Reservation | null>(null);
+
+  /**
+   * A promo code carried over from the original booking still has to be proved
+   * by the server — the URL only says which code to ask about.
+   */
+  const promoParam = params.get("promo");
+  useEffect(() => {
+    if (!promoParam) return;
+    let cancelled = false;
+    void validatePromoCode(promoParam)
+      .then((result) => {
+        if (!cancelled) setPromo(result);
+      })
+      .catch(() => {
+        // Unreachable server: the guest can still apply the code by hand.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [promoParam]);
 
   const nights = nightsBetween(range?.from, range?.to);
   const room = roomSlug
@@ -198,14 +251,23 @@ export function BookingFlow({
     }
   }
 
+  /**
+   * The phone number is the only hard requirement.
+   *
+   * It is where the instant confirmation goes, and how reception reaches a guest
+   * who has not arrived by the time their hold runs out. An email address is
+   * asked for insistently — it carries the full booking document — but plenty of
+   * guests here book from a phone and never open a mailbox, and refusing them a
+   * room over it would be absurd. So: validated when given, never demanded.
+   */
   function validateGuest() {
     const next: Partial<Record<keyof GuestDetails, string>> = {};
     if (guest.firstName.trim().length < 2) next.firstName = "Enter your first name";
     if (guest.lastName.trim().length < 2) next.lastName = "Enter your last name";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(guest.email))
-      next.email = "Enter a valid email address";
     if (guest.phone.replace(/\D/g, "").length < 10)
-      next.phone = "Enter a phone number we can reach you on";
+      next.phone = "We need a phone number to confirm and hold your room";
+    if (guest.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(guest.email))
+      next.email = "That email address doesn't look right";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -216,6 +278,14 @@ export function BookingFlow({
         description: "We've highlighted the fields below.",
       });
       return;
+    }
+    // Not a blocker, but worth one nudge: without an email there is no booking
+    // document, only the WhatsApp receipt and the reservation page.
+    if (!guest.email.trim()) {
+      toast.warning("No email address", {
+        description:
+          "You'll still get a WhatsApp confirmation with a link to your booking. Add an email if you'd like the full written confirmation too.",
+      });
     }
     goToStep(3);
   }
@@ -265,6 +335,27 @@ export function BookingFlow({
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-12">
       <div>
+        {amendRef && (
+          <div className="mb-6 flex flex-wrap items-start gap-3 rounded-2xl bg-brand-muted p-4 ring-1 ring-brand/25">
+            <PencilLineIcon className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
+            <div className="text-sm">
+              <p className="font-bold">Changing booking {amendRef}</p>
+              <p className="mt-1 text-muted-foreground">
+                Your dates, room, extras and details are filled in below — change
+                whatever you need. Confirming creates a new reservation, so{" "}
+                <Link
+                  href={`/manage-booking?ref=${amendRef}`}
+                  className="font-semibold underline underline-offset-2"
+                >
+                  cancel {amendRef}
+                </Link>{" "}
+                once the new one is in, or call {site.phone.display} and we will
+                move it for you.
+              </p>
+            </div>
+          </div>
+        )}
+
         <Stepper current={step} onJump={(index) => index < step && goToStep(index)} />
 
         {/* ----------------------------------------------------- step 1 */}
@@ -366,7 +457,7 @@ export function BookingFlow({
         {step === 2 && (
           <StepPanel
             title="Extras and your details"
-            description="Everything here is optional except the contact details we'll send your confirmation to."
+            description="Everything here is optional except your name and a phone number — that is where your confirmation goes."
           >
             <fieldset>
               <legend className="font-heading text-lg font-extrabold">
@@ -458,7 +549,7 @@ export function BookingFlow({
                 Guest details
               </legend>
               <p className="mt-1 text-sm text-muted-foreground">
-                No account needed. We use these only to confirm and hold your room.
+                No account needed. We use these only to confirm your booking and hold your room.
               </p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <Field
@@ -478,24 +569,25 @@ export function BookingFlow({
                   onChange={(value) => setGuest({ ...guest, lastName: value })}
                 />
                 <Field
+                  id="phone"
+                  label="Phone / WhatsApp"
+                  type="tel"
+                  value={guest.phone}
+                  error={errors.phone}
+                  required
+                  autoComplete="tel"
+                  hint="Required. Your instant confirmation arrives here on WhatsApp."
+                  onChange={(value) => setGuest({ ...guest, phone: value })}
+                />
+                <Field
                   id="email"
                   label="Email"
                   type="email"
                   value={guest.email}
                   error={errors.email}
                   autoComplete="email"
-                  hint="Your confirmation and receipt go here."
+                  hint="Strongly recommended — your full booking document is emailed here."
                   onChange={(value) => setGuest({ ...guest, email: value })}
-                />
-                <Field
-                  id="phone"
-                  label="Phone"
-                  type="tel"
-                  value={guest.phone}
-                  error={errors.phone}
-                  autoComplete="tel"
-                  hint="We'll send an SMS confirmation too."
-                  onChange={(value) => setGuest({ ...guest, phone: value })}
                 />
                 <Field
                   id="country"
@@ -545,7 +637,7 @@ export function BookingFlow({
         {step === 3 && room && range?.from && range?.to && (
           <StepPanel
             title="Review and confirm"
-            description="One last look. Pay online now, or settle at the hotel."
+            description="One last look. Nothing is charged now — you settle at the hotel."
           >
             <dl className="divide-y rounded-2xl bg-card ring-1 ring-foreground/10">
               <Row label="Room">
@@ -577,15 +669,38 @@ export function BookingFlow({
 
             <div className="mt-6 rounded-2xl bg-muted/60 p-5">
               <h3 className="flex items-center gap-2 font-heading text-base font-extrabold">
-                <CircleAlertIcon className="size-4 text-brand" aria-hidden="true" />
-                How payment works
+                <WalletIcon className="size-4 text-brand" aria-hidden="true" />
+                Nothing to pay now
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                You can pay online here through our secure payment provider, or
-                have the room held against your name and settle at the hotel by
-                card, bank transfer or cash. Card details are handled by the
-                payment provider and never stored on our servers. Corporate
-                guests can request an invoice at check-in.
+                {site.reservation.noPaymentNotice} Settle by card, bank transfer
+                or cash at reception. No card details are collected on this site.
+                Corporate guests can request an invoice at check-in.
+              </p>
+            </div>
+
+            {/*
+              The hold is what a guest is really agreeing to when no deposit
+              changes hands, so it is stated in full here — before the button,
+              not buried behind a link to the terms page.
+            */}
+            <div className="mt-4 rounded-2xl bg-brand-muted p-5">
+              <h3 className="flex items-center gap-2 font-heading text-base font-extrabold text-brand">
+                <ClockIcon className="size-4" aria-hidden="true" />
+                How long we hold your room
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed">
+                Your room is held until{" "}
+                <strong>
+                  {site.reservation.holdUntilTime} on{" "}
+                  {format(range.from, "EEEE d MMMM")}
+                </strong>
+                . If you have not arrived or contacted us by then, the
+                reservation is released and the room offered to other guests.
+              </p>
+              <p className="mt-2 text-sm leading-relaxed">
+                Running late? Call or WhatsApp {site.phone.display} at any hour
+                and we will keep it for you. {site.reservation.cancellation}
               </p>
             </div>
 
@@ -597,7 +712,9 @@ export function BookingFlow({
                 aria-describedby="terms-text"
               />
               <span id="terms-text">
-                I accept the{" "}
+                I understand the room is held until{" "}
+                {site.reservation.holdUntilTime} on my arrival date and paid for
+                at the hotel, and I accept the{" "}
                 <Link href="/terms#booking" className="font-semibold text-brand underline underline-offset-2">
                   booking terms
                 </Link>
@@ -634,7 +751,7 @@ export function BookingFlow({
                   </>
                 ) : (
                   <>
-                    Confirm booking · {formatNaira(price.total)}
+                    Reserve room · {formatNaira(price.total)} at the hotel
                     <ArrowRightIcon />
                   </>
                 )}
@@ -807,6 +924,7 @@ function Field({
   error,
   hint,
   autoComplete,
+  required,
 }: {
   id: string;
   label: string;
@@ -816,6 +934,7 @@ function Field({
   error?: string;
   hint?: string;
   autoComplete?: string;
+  required?: boolean;
 }) {
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`]
     .filter(Boolean)
@@ -823,11 +942,19 @@ function Field({
 
   return (
     <div>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && (
+          <span className="ml-1 text-brand" aria-hidden="true">
+            *
+          </span>
+        )}
+      </Label>
       <Input
         id={id}
         type={type}
         value={value}
+        required={required}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
         aria-describedby={describedBy || undefined}
@@ -1061,7 +1188,7 @@ function BookingSummary({
               </dd>
             </div>
             <p className="text-xs text-muted-foreground">
-              All taxes and charges included. Pay online or at the hotel.
+              All taxes and charges included. Payable at the hotel.
             </p>
           </dl>
         ) : (
@@ -1121,8 +1248,13 @@ function Confirmation({
           You&apos;re booked, {reservation.guest.firstName}
         </h2>
         <p className="mt-3 text-muted-foreground">
-          A confirmation is on its way to {reservation.guest.email}, and an SMS to{" "}
-          {reservation.guest.phone}. Reception is expecting you.
+          A WhatsApp confirmation is on its way to {reservation.guest.phone}
+          {reservation.guest.email ? (
+            <>
+              , and your full booking document to {reservation.guest.email}
+            </>
+          ) : null}
+          . Reception is expecting you — nothing to pay until you arrive.
         </p>
 
         <div className="mt-8 rounded-2xl bg-brand-muted p-5">
@@ -1161,26 +1293,34 @@ function Confirmation({
               ? `, ${reservation.children} child${reservation.children === 1 ? "" : "ren"}`
               : ""}
           </Row>
-          <Row label="Total">
-            {formatNaira(price.total)} — payable online or at the hotel
+          <Row label="Payment">Pay at the hotel — {formatNaira(price.total)}</Row>
+          <Row label="Room held until">
+            {reservation.holdUntil.split("T")[1]} on{" "}
+            {format(parseISO(reservation.checkIn), "EEEE d MMMM")}
           </Row>
         </dl>
+
+        <p className="mt-4 text-left text-xs leading-relaxed text-muted-foreground">
+          {site.reservation.noPaymentNotice} If you have not arrived or contacted
+          us by the time above, the reservation is released. Running late? Call
+          or WhatsApp {site.phone.display} and we will hold it.
+        </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button
             size="lg"
             className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
-            render={<Link href={`/manage-booking?ref=${reservation.reference}`} />}
+            render={<Link href={`/reservation/${reservation.reference}`} />}
           >
-            Manage this booking
+            View your reservation
           </Button>
           <Button
             variant="outline"
             size="lg"
             className="h-12 font-bold"
-            render={<Link href="/" />}
+            render={<Link href={`/manage-booking?ref=${reservation.reference}`} />}
           >
-            Back to the hotel
+            Change or cancel
           </Button>
         </div>
 

@@ -13,7 +13,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Facilities & Amenities",
   description:
-    "Pool, 24-hour gym, spa, business centre, conference halls, secure parking and 24-hour reception at Pentagon Hotel and Suites, Choba, Port Harcourt.",
+    "Pool, 24-hour gym, spa, business centre, conference halls, secure parking and 24-hour reception at Pentagon International Hotel & Suites, Choba, Port Harcourt.",
   alternates: { canonical: "/facilities" },
   openGraph: {
     title: `Facilities & Amenities · ${site.name}`,

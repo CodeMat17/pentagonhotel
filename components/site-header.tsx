@@ -53,7 +53,7 @@ export function SiteHeader() {
           : "border-b border-border/80 bg-background/85 backdrop-blur-lg supports-backdrop-filter:bg-background/70",
       )}
     >
-      <div className="container-page flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]">
+      <div className="container-page flex pt-1 items-center justify-between gap-4">
         <Link
           href="/"
           // No aria-label: the visible wordmark is the accessible name, so

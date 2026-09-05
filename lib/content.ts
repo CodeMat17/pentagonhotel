@@ -28,7 +28,12 @@ import {
   type ServiceItem,
   type Venue,
 } from "@/lib/data";
-import { convexConfigured, q, type ConvexImage } from "@/lib/convex";
+import {
+  convexConfigured,
+  q,
+  type ConvexImage,
+  type PublicReservation,
+} from "@/lib/convex";
 
 /**
  * The site's content layer.
@@ -459,7 +464,34 @@ export async function getSettings(): Promise<SiteSettings | null> {
   );
 }
 
+/* ------------------------------------------------------------ reservations */
+
+/**
+ * One guest's reservation, for the page behind the link we send them.
+ *
+ * Deliberately outside `load()`: a reservation is not content, and caching one
+ * for five minutes would show a guest a stay they had just cancelled. It is
+ * fetched fresh on every request, and there is no bundled fallback — an
+ * unreachable backend means "we cannot show this right now", never stale
+ * details about somebody's stay.
+ */
+export async function getReservation(
+  reference: string,
+): Promise<PublicReservation | null> {
+  if (!convexConfigured) return null;
+  try {
+    return await fetchQuery(q.publicReservation, {
+      reference: reference.trim().toUpperCase(),
+    });
+  } catch (error) {
+    console.error("[content] reservation lookup failed:", error);
+    return null;
+  }
+}
+
 /* ------------------------------------------------------------------- types */
+
+export type { PublicReservation } from "@/lib/convex";
 
 /**
  * The content interfaces, re-exported from one place. Pages and components

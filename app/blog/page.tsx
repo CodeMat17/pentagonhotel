@@ -13,7 +13,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Journal",
   description:
-    "City guides, hotel news and notes from the kitchen — written by the people who work at Pentagon Hotel and Suites in Choba, Port Harcourt.",
+    "City guides, hotel news and notes from the kitchen — written by the people who work at Pentagon International Hotel & Suites in Choba, Port Harcourt.",
   alternates: { canonical: "/blog" },
   openGraph: {
     title: `Journal · ${site.name}`,

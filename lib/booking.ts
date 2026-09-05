@@ -3,13 +3,15 @@
  *
  * Pricing is pure and runs in the browser so the summary updates as the guest
  * types. Everything that must be authoritative — whether a promo code is real,
- * and the reservation itself — is a Convex call, because a discount the client
- * could invent is not a discount.
+ * the reservation itself, and how long the room is held — is a Convex call,
+ * because a discount the client could invent is not a discount.
  *
- * No card data is handled here, by design.
+ * No card data is handled here, and none ever will be: Pentagon takes no payment
+ * online. A reservation is a room held against a name and settled at the desk,
+ * which is why `holdUntil` matters as much as the total.
  */
 
-import { m, q } from "@/lib/convex";
+import { m, q, type BookingStatus } from "@/lib/convex";
 import { runMutation, runQuery } from "@/lib/client";
 import type { ExtraService, RoomSummary } from "@/lib/content";
 import { site } from "@/lib/site";
@@ -35,7 +37,9 @@ export interface GuestDetails {
 export interface Reservation {
   reference: string;
   createdAt: string;
-  status: "confirmed" | "cancelled";
+  status: BookingStatus;
+  /** `yyyy-mm-ddThh:mm` — when the room stops being held on arrival day. */
+  holdUntil: string;
   roomSlug: string;
   roomName: string;
   checkIn: string;
@@ -178,36 +182,47 @@ export async function checkAvailability(
 /**
  * Writes the reservation to Convex and returns it with its reference.
  *
- * The reference is minted server-side and checked for collisions there, so two
- * guests booking at the same instant can never share one.
+ * The reference and the hold are both minted server-side — the reference so two
+ * guests booking at the same instant can never share one, the hold so the guest
+ * cannot be shown a promise the hotel has not made. Confirmations go out from
+ * the server the moment this commits; nothing here waits on them.
  */
 export async function createReservation(
-  input: Omit<Reservation, "reference" | "createdAt" | "status">,
+  input: Omit<Reservation, "reference" | "createdAt" | "status" | "holdUntil">,
 ): Promise<Reservation> {
-  const { reference } = await runMutation(m.createBooking, input);
+  const { reference, holdUntil } = await runMutation(m.createBooking, input);
   return {
     ...input,
     reference,
+    holdUntil,
     createdAt: new Date().toISOString(),
     status: "confirmed",
   };
 }
 
-/** Looks a booking up by reference *and* email — a reference alone is not a key. */
+/**
+ * Looks a booking up by reference *and* a contact detail — a reference alone is
+ * not a key.
+ *
+ * `contact` is the email **or** the phone number on the booking. Email is
+ * strongly encouraged at booking but never required, so insisting on it here
+ * would lock a guest out of the very reservation we told them they could manage.
+ */
 export async function findReservation(
   reference: string,
-  email: string,
+  contact: string,
 ): Promise<Reservation | null> {
   const booking = await runQuery(q.lookupBooking, {
     reference: reference.trim().toUpperCase(),
-    email: email.trim(),
+    contact: contact.trim(),
   });
   if (!booking) return null;
 
   return {
     reference: booking.reference,
     createdAt: new Date(booking._creationTime).toISOString(),
-    status: booking.status === "cancelled" ? "cancelled" : "confirmed",
+    status: booking.status,
+    holdUntil: booking.holdUntil ?? `${booking.checkIn}T${site.reservation.holdUntilTime}`,
     roomSlug: booking.roomSlug,
     roomName: booking.roomName,
     checkIn: booking.checkIn,
@@ -223,9 +238,45 @@ export async function findReservation(
   };
 }
 
-export async function cancelReservation(reference: string, email: string) {
+export async function cancelReservation(reference: string, contact: string) {
   await runMutation(m.cancelBooking, {
     reference: reference.trim().toUpperCase(),
-    email: email.trim(),
+    contact: contact.trim(),
   });
+}
+
+/** A reservation the hotel still expects to turn into a stay. */
+export function isLiveReservation(status: BookingStatus): boolean {
+  return status !== "cancelled" && status !== "no-show";
+}
+
+/**
+ * Where the manage-booking page leaves a reservation for the booking flow to
+ * pick up when a guest chooses to change their dates or room.
+ *
+ * Session storage rather than the query string: the stay itself is fine in a
+ * URL, but a guest's name, phone and email are not — those would end up in
+ * history, in a shared link, and in any referrer we send onward.
+ */
+export const AMEND_STASH_KEY = "pentagon:amend";
+
+export interface AmendStash {
+  reference: string;
+  guest: GuestDetails;
+}
+
+/** Query string that reopens the booking flow on an existing reservation. */
+export function amendBookingHref(booking: Reservation): string {
+  const params = new URLSearchParams({
+    amend: booking.reference,
+    room: booking.roomSlug,
+    from: booking.checkIn,
+    to: booking.checkOut,
+    adults: String(booking.adults),
+    children: String(booking.children),
+    rooms: String(booking.roomCount),
+  });
+  if (booking.extras.length > 0) params.set("extras", booking.extras.join(","));
+  if (booking.promoCode) params.set("promo", booking.promoCode);
+  return `/booking?${params.toString()}`;
 }

@@ -1,6 +1,6 @@
-# Pentagon Hotel and Suites
+# Pentagon International Hotel & Suites
 
-The website for Pentagon Hotel and Suites — 1 Solomon Wali Street, Owhipa Choba,
+The website for Pentagon International Hotel & Suites — 1 Solomon Wali Street, Owhipa Choba,
 Port Harcourt. Built with Next.js 16 (App Router), React 19, Tailwind v4,
 shadcn/ui on Base UI, Framer Motion and Nunito.
 

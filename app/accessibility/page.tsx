@@ -11,7 +11,7 @@ import { site, telLink } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Accessibility",
   description:
-    "Accessible rooms, step-free entrances, lifts, accessible parking and bathroom facilities at Pentagon Hotel and Suites — plus our website accessibility statement.",
+    "Accessible rooms, step-free entrances, lifts, accessible parking and bathroom facilities at Pentagon International Hotel & Suites — plus our website accessibility statement.",
   alternates: { canonical: "/accessibility" },
 };
 

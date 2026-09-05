@@ -18,7 +18,7 @@ import { fullAddress, site, telLink, whatsapp } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Contact us",
   description:
-    "Call 0803 383 3628, message us on WhatsApp or email Pentagon Hotel and Suites, 1 Solomon Wali Street, Owhipa Choba, Port Harcourt. Reception open 24 hours.",
+    "Call 0803 383 3628, message us on WhatsApp or email Pentagon International Hotel & Suites, 1 Solomon Wali Street, Owhipa Choba, Port Harcourt. Reception open 24 hours.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: `Contact · ${site.name}`,

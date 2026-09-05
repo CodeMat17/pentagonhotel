@@ -13,7 +13,7 @@ import { site, telLink, whatsapp } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Guest Services",
   description:
-    "Concierge, airport transfers, laundry, 24-hour room service, car hire, babysitting, currency exchange and medical assistance at Pentagon Hotel and Suites.",
+    "Concierge, airport transfers, laundry, 24-hour room service, car hire, babysitting, currency exchange and medical assistance at Pentagon International Hotel & Suites.",
   alternates: { canonical: "/services" },
   openGraph: {
     title: `Guest Services · ${site.name}`,

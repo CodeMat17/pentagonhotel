@@ -55,11 +55,13 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 88, fontWeight: 800, lineHeight: 1.05 }}>
-            Pentagon Hotel
+          {/* Two lines at 72px: the full name is too long to hold 88px inside
+              the 1056px the padding leaves. */}
+          <div style={{ display: "flex", fontSize: 72, fontWeight: 800, lineHeight: 1.05 }}>
+            Pentagon International
           </div>
-          <div style={{ display: "flex", fontSize: 88, fontWeight: 800, lineHeight: 1.05 }}>
-            <span style={{ color: "#e0a54a" }}>&amp;</span>&nbsp;Suites
+          <div style={{ display: "flex", fontSize: 72, fontWeight: 800, lineHeight: 1.05 }}>
+            Hotel&nbsp;<span style={{ color: "#e0a54a" }}>&amp;</span>&nbsp;Suites
           </div>
           <div
             style={{
@@ -83,7 +85,7 @@ export default function OpengraphImage() {
             color: "rgba(253,251,247,0.6)",
           }}
         >
-          <div style={{ display: "flex" }}>pentagonhotelandsuites.com</div>
+          <div style={{ display: "flex" }}>pentagoninternationalhotel.com</div>
           <div style={{ display: "flex" }}>{site.phone.display}</div>
         </div>
       </div>

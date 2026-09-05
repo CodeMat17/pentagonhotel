@@ -182,11 +182,44 @@ export interface SettingsDoc extends Doc {
   announcement: string;
   announcementActive: boolean;
   bookingsOpen: boolean;
+  /* Added after the first release, so every one of these may be absent. */
+  holdUntilTime?: string;
+  cancellationPolicy?: string;
+  noShowPolicy?: string;
+  remindersEnabled?: boolean;
+  whatsappEnabled?: boolean;
+}
+
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "checked-in"
+  | "completed"
+  | "cancelled"
+  | "no-show";
+
+export interface GuestDoc {
+  firstName: string;
+  lastName: string;
+  /** May be empty — the phone number is the mandatory channel, not the email. */
+  email: string;
+  phone: string;
+  country: string;
+  specialRequests: string;
+  arrivalTime: string;
+}
+
+export interface NotificationDoc {
+  channel: "email" | "whatsapp";
+  kind: "confirmation" | "reminder-day-before" | "reminder-arrival" | "cancellation";
+  status: "sent" | "failed" | "skipped";
+  detail: string;
+  at: number;
 }
 
 export interface BookingDoc extends Doc {
   reference: string;
-  status: "pending" | "confirmed" | "checked-in" | "completed" | "cancelled";
+  status: BookingStatus;
   roomSlug: string;
   roomName: string;
   checkIn: string;
@@ -197,16 +230,47 @@ export interface BookingDoc extends Doc {
   roomCount: number;
   extras: string[];
   promoCode: string | null;
-  guest: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    country: string;
-    specialRequests: string;
-    arrivalTime: string;
-  };
+  guest: GuestDoc;
   total: number;
+  payment?: "pay-at-hotel";
+  /** `yyyy-mm-ddThh:mm` — when the room stops being held on arrival day. */
+  holdUntil?: string;
+  notifications?: NotificationDoc[];
+  remindersSent?: string[];
+}
+
+/**
+ * The redacted view behind /reservation/PHS-XXXXXX.
+ *
+ * The reference alone opens it, because the reference only ever reaches the
+ * guest — so this deliberately carries the stay and none of the guest's contact
+ * details.
+ */
+export interface PublicReservation {
+  reference: string;
+  status: BookingStatus;
+  createdAt: number;
+  roomSlug: string;
+  roomName: string;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  adults: number;
+  children: number;
+  roomCount: number;
+  extras: string[];
+  total: number;
+  payment: string;
+  holdUntil: string;
+  specialRequests: string;
+  guestName: string;
+  hasEmail: boolean;
+  policy: {
+    checkIn: string;
+    checkOut: string;
+    cancellation: string;
+    noShow: string;
+  };
 }
 
 type Empty = Record<string, never>;
@@ -246,11 +310,21 @@ export const q = {
     "posts:bySlug",
   ),
   settings: makeFunctionReference<"query", Empty, SettingsDoc | null>("settings:get"),
+  /**
+   * Two-factor: the reference plus the email *or* the phone on the booking.
+   * A guest who never gave us an email can still manage their stay.
+   */
   lookupBooking: makeFunctionReference<
     "query",
-    { reference: string; email: string },
+    { reference: string; contact: string },
     BookingDoc | null
   >("bookings:lookup"),
+  /** Reference only — the redacted page behind the link we send the guest. */
+  publicReservation: makeFunctionReference<
+    "query",
+    { reference: string },
+    PublicReservation | null
+  >("bookings:byPublicReference"),
 } as const;
 
 /* ---------------------------------------------------------------- mutations */
@@ -258,12 +332,22 @@ export const q = {
 export const m = {
   createBooking: makeFunctionReference<
     "mutation",
-    Omit<BookingDoc, "_id" | "_creationTime" | "reference" | "status">,
-    { reference: string }
+    Omit<
+      BookingDoc,
+      | "_id"
+      | "_creationTime"
+      | "reference"
+      | "status"
+      | "payment"
+      | "holdUntil"
+      | "notifications"
+      | "remindersSent"
+    >,
+    { reference: string; holdUntil: string }
   >("bookings:create"),
   cancelBooking: makeFunctionReference<
     "mutation",
-    { reference: string; email: string },
+    { reference: string; contact: string },
     string
   >("bookings:cancel"),
   sendMessage: makeFunctionReference<
