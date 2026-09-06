@@ -43,6 +43,7 @@ import {
 } from "@/lib/booking";
 import { cleanError } from "@/lib/client";
 import type { ExtraService } from "@/lib/content";
+import { formatTime12 } from "@/lib/format";
 import { formatNaira, fullAddress, site, telLink } from "@/lib/site";
 
 /**
@@ -146,7 +147,7 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
           Find your booking
         </Label>
         <p id="reference-hint" className="mt-1 text-sm text-muted-foreground">
-          Enter the reference we sent you — it starts with PHS- — and the email
+          Enter the reference we sent you — it starts with PIHS- — and the email
           address or phone number you booked with.
         </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -155,7 +156,7 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
             value={reference}
             aria-describedby="reference-hint"
             onChange={(event) => setReference(event.target.value.toUpperCase())}
-            placeholder="PHS-XXXXXX"
+            placeholder="PIHS-XXXXXX"
             className="h-12 flex-1 font-mono tracking-wider"
           />
           <Input
@@ -255,7 +256,7 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
                 {formatNaira(booking.total)} — payable at the hotel
               </Detail>
               <Detail label="Room held until">
-                {booking.holdUntil.split("T")[1]} on{" "}
+                {formatTime12(booking.holdUntil.split("T")[1])} on{" "}
                 {format(parseISO(booking.checkIn), "EEE d MMM yyyy")}
               </Detail>
               {booking.guest.specialRequests && (
@@ -407,7 +408,7 @@ function PrintReceipt({
             {formatNaira(booking.total)} — payable at the hotel
           </ReceiptRow>
           <ReceiptRow label="Room held until">
-            {booking.holdUntil.split("T")[1]} on{" "}
+            {formatTime12(booking.holdUntil.split("T")[1])} on{" "}
             {format(parseISO(booking.checkIn), "EEE d MMM yyyy")}
           </ReceiptRow>
         </tbody>

@@ -23,7 +23,7 @@ import { Section } from "@/components/section";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getReservation } from "@/lib/content";
-import { formatDateLong } from "@/lib/format";
+import { formatDateLong, formatTime12 } from "@/lib/format";
 import {
   formatNaira,
   fullAddress,
@@ -33,7 +33,7 @@ import {
 } from "@/lib/site";
 
 /**
- * A guest's own reservation, at `/reservation/PHS-XXXXXX`.
+ * A guest's own reservation, at `/reservation/PIHS-XXXXXX`.
  *
  * This page exists because the WhatsApp message deliberately does not carry the
  * booking. A phone message should be a receipt — glanceable, three lines, one
@@ -117,13 +117,13 @@ export default async function ReservationPage({
             <Row Icon={CalendarDaysIcon} label="Check-in">
               {formatDateLong(reservation.checkIn)}
               <span className="mt-0.5 block text-xs font-semibold text-muted-foreground">
-                From {reservation.policy.checkIn}
+                From {formatTime12(reservation.policy.checkIn)}
               </span>
             </Row>
             <Row Icon={CalendarDaysIcon} label="Check-out">
               {formatDateLong(reservation.checkOut)}
               <span className="mt-0.5 block text-xs font-semibold text-muted-foreground">
-                By {reservation.policy.checkOut} · {reservation.nights} night
+                By {formatTime12(reservation.policy.checkOut)} · {reservation.nights} night
                 {reservation.nights === 1 ? "" : "s"}
               </span>
             </Row>
@@ -158,7 +158,7 @@ export default async function ReservationPage({
             <h2 className="flex items-center gap-2 font-heading text-base font-extrabold text-brand">
               <ClockIcon className="size-4" aria-hidden="true" />
               We hold your room until{" "}
-              {reservation.holdUntil.split("T")[1]} on{" "}
+              {formatTime12(reservation.holdUntil.split("T")[1])} on{" "}
               {formatDateLong(reservation.checkIn)}
             </h2>
             <p className="mt-2 text-sm leading-relaxed">
@@ -341,7 +341,7 @@ function HotelInformation() {
           </a>
         </Info>
         <Info Icon={ClockIcon} label="Check-in / check-out">
-          From {site.checkIn} · by {site.checkOut}
+          From {formatTime12(site.checkIn)} · by {formatTime12(site.checkOut)}
         </Info>
       </dl>
     </section>

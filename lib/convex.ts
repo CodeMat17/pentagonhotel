@@ -240,7 +240,7 @@ export interface BookingDoc extends Doc {
 }
 
 /**
- * The redacted view behind /reservation/PHS-XXXXXX.
+ * The redacted view behind /reservation/PIHS-XXXXXX.
  *
  * The reference alone opens it, because the reference only ever reaches the
  * guest — so this deliberately carries the stay and none of the guest's contact

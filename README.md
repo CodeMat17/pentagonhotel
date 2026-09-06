@@ -89,7 +89,7 @@ Three functions in `lib/booking.ts` are the entire integration surface:
 | Function | Currently | Should become |
 |---|---|---|
 | `checkAvailability()` | deterministic mock derived from date + room slug | a call to the PMS / channel manager |
-| `createReservation()` | writes to `localStorage`, returns a `PHS-` reference | a POST to the booking API, which also sends the confirmation email/SMS |
+| `createReservation()` | writes to `localStorage`, returns a `PIHS-` reference | a POST to the booking API, which also sends the confirmation email/SMS |
 | `findReservation()` / `cancelReservation()` | reads/writes `localStorage` | authenticated lookup by reference |
 
 All three are already `async` and the UI awaits them, so nothing above them

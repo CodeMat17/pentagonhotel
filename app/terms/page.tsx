@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
+import { formatTime12 } from "@/lib/format";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -27,8 +28,8 @@ export default function TermsPage() {
           <section id="booking" className="scroll-mt-28">
             <h2 className="font-heading text-2xl font-extrabold">Booking terms</h2>
             <ul className="mt-3 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
-              <li>A booking is confirmed when you receive a reference beginning PHS-. Until then, no room is held.</li>
-              <li>No payment is taken to make a reservation. The room is held against your name until {site.reservation.holdUntilTime} on your arrival date; if you have neither arrived nor contacted us by then it is treated as a no-show and released.</li>
+              <li>A booking is confirmed when you receive a reference beginning PIHS-. Until then, no room is held.</li>
+              <li>No payment is taken to make a reservation. The room is held against your name until {formatTime12(site.reservation.holdUntilTime)} on your arrival date; if you have neither arrived nor contacted us by then it is treated as a no-show and released.</li>
               <li>Rates are quoted per room per night in Nigerian naira and exclude {Math.round(site.tax.vatRate * 100)}% VAT and a {Math.round(site.tax.serviceRate * 100)}% service charge unless stated otherwise.</li>
               <li>The lead guest must be 18 or over and present government-issued photo ID at check-in.</li>
               <li>Room allocation requests (floor, view, connecting rooms) are noted and honoured where possible, but are not guaranteed.</li>
@@ -72,7 +73,7 @@ export default function TermsPage() {
             </div>
             <ul className="mt-4 ml-5 list-disc space-y-2 leading-relaxed text-muted-foreground">
               <li>Cancel inside the window and one night&apos;s accommodation is charged.</li>
-              <li>Your room is held until {site.reservation.holdUntilTime} on the arrival date. Tell us you are arriving later — by phone, WhatsApp or email, at any hour — and we hold it for as long as you need.</li>
+              <li>Your room is held until {formatTime12(site.reservation.holdUntilTime)} on the arrival date. Tell us you are arriving later — by phone, WhatsApp or email, at any hour — and we hold it for as long as you need.</li>
               <li>A no-show is a reservation where the guest neither arrives nor makes contact by the hold time. The reservation is released, the room offered to other guests, and one night may be charged.</li>
               <li>Early departure is charged for the nights booked unless we can re-let the room.</li>
               <li>Cancel through Manage Booking, by phone, by WhatsApp or by email — all four count, and we confirm each in writing.</li>

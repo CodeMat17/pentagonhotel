@@ -4,6 +4,7 @@ import { CalendarPlusIcon, CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { formatTime12 } from "@/lib/format";
 import { fullAddress, site } from "@/lib/site";
 
 /**
@@ -69,7 +70,7 @@ export function AddToCalendar({
       `SUMMARY:${icsEscape(`${site.name} — ${roomName}`)}`,
       `LOCATION:${icsEscape(fullAddress)}`,
       `DESCRIPTION:${icsEscape(
-        `Booking ${reference}. Check-in from ${checkInTime}. Payment is made at the hotel. ${site.url}/reservation/${reference}`,
+        `Booking ${reference}. Check-in from ${formatTime12(checkInTime)}. Payment is made at the hotel. ${site.url}/reservation/${reference}`,
       )}`,
       "END:VEVENT",
       "END:VCALENDAR",

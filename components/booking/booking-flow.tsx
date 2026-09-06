@@ -16,8 +16,10 @@ import {
   CopyIcon,
   LoaderCircleIcon,
   MaximizeIcon,
+  MinusIcon,
   PartyPopperIcon,
   PencilLineIcon,
+  PlusIcon,
   TagIcon,
   UsersIcon,
   WalletIcon,
@@ -47,6 +49,7 @@ import {
 } from "@/lib/booking";
 import { cleanError } from "@/lib/client";
 import type { ExtraService, RoomSummary } from "@/lib/content";
+import { formatTime12 } from "@/lib/format";
 import { formatNaira, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -692,7 +695,7 @@ export function BookingFlow({
               <p className="mt-2 text-sm leading-relaxed">
                 Your room is held until{" "}
                 <strong>
-                  {site.reservation.holdUntilTime} on{" "}
+                  {formatTime12(site.reservation.holdUntilTime)} on{" "}
                   {format(range.from, "EEEE d MMMM")}
                 </strong>
                 . If you have not arrived or contacted us by then, the
@@ -713,7 +716,7 @@ export function BookingFlow({
               />
               <span id="terms-text">
                 I understand the room is held until{" "}
-                {site.reservation.holdUntilTime} on my arrival date and paid for
+                {formatTime12(site.reservation.holdUntilTime)} on my arrival date and paid for
                 at the hotel, and I accept the{" "}
                 <Link href="/terms#booking" className="font-semibold text-brand underline underline-offset-2">
                   booking terms
@@ -893,24 +896,94 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   const id = `field-${label.toLowerCase()}`;
+  // Hold the raw text locally so the field can be cleared and retyped; the
+  // value is only clamped when the field is left or Enter is pressed.
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const clamp = (next: number) => Math.min(max, Math.max(min, next));
+
+  const commit = (raw: string) => {
+    const parsed = Number.parseInt(raw, 10);
+    const next = Number.isNaN(parsed) ? min : clamp(parsed);
+    setDraft(String(next));
+    if (next !== value) onChange(next);
+  };
+
+  const step = (delta: number) => {
+    const next = clamp(value + delta);
+    setDraft(String(next));
+    if (next !== value) onChange(next);
+  };
+
   return (
     <div className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
       <Label htmlFor={id} className="text-sm font-bold">
         {label}
       </Label>
       <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
-      <Input
-        id={id}
-        type="number"
-        inputMode="numeric"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) =>
-          onChange(Math.min(max, Math.max(min, Number(event.target.value) || min)))
-        }
-        className="mt-2 h-11"
-      />
+      <div className="mt-2 flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-11 shrink-0 rounded-full"
+          onClick={() => step(-1)}
+          disabled={value <= min}
+          aria-label={`Decrease ${label.toLowerCase()}`}
+        >
+          <MinusIcon className="size-4" />
+        </Button>
+        <Input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          value={draft}
+          onChange={(event) => {
+            const raw = event.target.value.replace(/[^0-9]/g, "");
+            setDraft(raw);
+            const parsed = Number.parseInt(raw, 10);
+            // Commit while typing only when the number is already in range, so
+            // typing "12" into a 1–12 field is not clipped after the first digit.
+            if (!Number.isNaN(parsed) && parsed >= min && parsed <= max && parsed !== value) {
+              onChange(parsed);
+            }
+          }}
+          onBlur={(event) => commit(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit(draft);
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              step(1);
+            } else if (event.key === "ArrowDown") {
+              event.preventDefault();
+              step(-1);
+            }
+          }}
+          className="h-11 flex-1 text-center text-base font-semibold tabular-nums"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-11 shrink-0 rounded-full"
+          onClick={() => step(1)}
+          disabled={value >= max}
+          aria-label={`Increase ${label.toLowerCase()}`}
+        >
+          <PlusIcon className="size-4" />
+        </Button>
+      </div>
+      <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
+        {min}–{max}
+      </p>
     </div>
   );
 }
@@ -1295,7 +1368,7 @@ function Confirmation({
           </Row>
           <Row label="Payment">Pay at the hotel — {formatNaira(price.total)}</Row>
           <Row label="Room held until">
-            {reservation.holdUntil.split("T")[1]} on{" "}
+            {formatTime12(reservation.holdUntil.split("T")[1])} on{" "}
             {format(parseISO(reservation.checkIn), "EEEE d MMMM")}
           </Row>
         </dl>

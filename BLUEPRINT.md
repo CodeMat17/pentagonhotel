@@ -75,7 +75,7 @@ Four steps, resumable, entirely usable on a phone.
    promo code, guest information, special requests.
 4. **Review & Confirm** — full breakdown (room × nights, extras, 7.5% VAT, 5% service
    charge), the pay-at-hotel notice, the hold policy stated in full, policy
-   acknowledgement, then confirmation with reference `PHS-XXXXXX`.
+   acknowledgement, then confirmation with reference `PIHS-XXXXXX`.
 
 Persistent booking summary (desktop rail, mobile sticky bar). Sonner toasts on every
 state change. Skeletons during the availability check.
@@ -95,7 +95,7 @@ fail the booking, both are logged onto it:
 - **Email (Resend)** — the whole booking. The official document.
 - **WhatsApp (Meta Cloud API)** — four lines and a link. The receipt.
 
-The link goes to `/reservation/PHS-XXXXXX`: a private, `noindex`, uncached page
+The link goes to `/reservation/PIHS-XXXXXX`: a private, `noindex`, uncached page
 carrying the stay, the hotel's details, the policies, Add to Calendar, and
 directions. A phone number is mandatory at booking; an email address is pressed
 for but never required, so a guest who does not use email still gets a booking
