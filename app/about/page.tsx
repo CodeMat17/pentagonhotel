@@ -9,7 +9,7 @@ import {
   getReviews,
   type RatingSummary,
 } from "@/lib/content";
-import { site } from "@/lib/site";
+import { ogImage, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About the hotel",
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     "Pentagon International Hotel & Suites in Owhipa Choba — a purpose-built hotel in Port Harcourt, what we stand for, and the standards we hold ourselves to.",
   alternates: { canonical: "/about" },
   openGraph: {
+    images: [ogImage],
     title: `About · ${site.name}`,
     description: "A purpose-built hotel in Owhipa Choba, Port Harcourt.",
     url: `${site.url}/about`,

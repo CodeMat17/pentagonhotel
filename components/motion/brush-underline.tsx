@@ -1,38 +1,27 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
+import type { CSSProperties } from "react";
 
 /**
  * The hand-drawn gold underline that sits beneath "Pentagon" in the hero.
  *
  * Two strokes on purpose: a confident main sweep and a lighter second pass
  * that overshoots on the right, which is what makes it read as drawn by hand
- * rather than as a border. Both draw themselves in with `pathLength`, and a
- * gradient carries the stroke from deep gold into a highlight so it stays
- * visible against a dark hero image in either theme.
+ * rather than as a border. Both draw themselves in, and a gradient carries the
+ * stroke from deep gold into a highlight so it stays visible against a dark
+ * hero image in either theme.
+ *
+ * The draw is CSS rather than framer-motion's `pathLength` so the hero renders
+ * with no client JavaScript — see `hero-reveal.tsx` for why that matters here.
+ * `pathLength="1"` normalises both paths to a single unit, so one dash offset
+ * animates strokes of different real lengths identically.
  */
 export function BrushUnderline({
-  delay = 0.55,
+  delay = 320,
   className,
 }: {
+  /** Milliseconds after first paint. */
   delay?: number;
   className?: string;
 }) {
-  const reduced = useReducedMotion();
-
-  const draw = (i: number, opacity = 1) => ({
-    initial: reduced ? undefined : { pathLength: 0, opacity: 0 },
-    animate: { pathLength: 1, opacity },
-    transition: {
-      pathLength: {
-        duration: 0.85,
-        delay: delay + i * 0.18,
-        ease: [0.16, 1, 0.3, 1] as const,
-      },
-      opacity: { duration: 0.15, delay: delay + i * 0.18 },
-    },
-  });
-
   return (
     <svg
       aria-hidden="true"
@@ -52,19 +41,25 @@ export function BrushUnderline({
         </linearGradient>
       </defs>
 
-      <motion.path
+      <path
+        className="brush-stroke"
+        style={{ "--brush-delay": `${delay}ms` } as CSSProperties}
+        pathLength={1}
         d="M3 17.5C54 8.5 121 4.5 178 6.5C223 8 268 12 296 18"
         stroke="url(#brush-underline-gold)"
         strokeWidth={7}
         strokeLinecap="round"
-        {...draw(0)}
       />
-      <motion.path
+      <path
+        className="brush-stroke"
+        style={
+          { "--brush-delay": `${delay + 180}ms`, opacity: 0.6 } as CSSProperties
+        }
+        pathLength={1}
         d="M22 24C79 18.5 152 16.5 213 18.5C246 19.6 271 21.4 288 23.5"
         stroke="url(#brush-underline-gold)"
         strokeWidth={3}
         strokeLinecap="round"
-        {...draw(1, 0.6)}
       />
     </svg>
   );

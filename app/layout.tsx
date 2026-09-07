@@ -12,7 +12,7 @@ import {
 } from "@/components/structured-data";
 import { getReviews, getRooms, getSettings } from "@/lib/content";
 import { Toaster } from "@/components/ui/sonner";
-import { site } from "@/lib/site";
+import { resolveContact, site } from "@/lib/site";
 import "./globals.css";
 
 /**
@@ -21,7 +21,12 @@ import "./globals.css";
  */
 const nunito = Nunito({
   variable: "--font-sans",
-  subsets: ["latin"],
+  // `latin-ext` is not optional here: the naira sign (₦, U+20A6) sits in it,
+  // and every price on the site is in naira. Declaring only `latin` still
+  // rendered correctly — the browser simply discovered the latin-ext face
+  // late, fetched it after hydration and repainted, which pushed Largest
+  // Contentful Paint out by ~600ms. Listing it preloads it with the rest.
+  subsets: ["latin", "latin-ext"],
   display: "swap",
   preload: true,
   // No custom `fallback`: passing one replaces next/font's automatically
@@ -92,6 +97,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     getSettings(),
   ]);
 
+  // Resolved once, here, and handed to the header, the action bar, the footer
+  // and the schema — so every piece of chrome quotes the same number, and the
+  // settings row is read once per render rather than by each of them.
+  const contact = resolveContact(settings);
+
   return (
     <html
       lang="en-NG"
@@ -112,28 +122,32 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             Skip to main content
           </a>
 
-          {settings?.announcementActive && settings.announcement ? (
-            <p
-              role="status"
-              className="bg-brand px-4 py-2 text-center text-sm font-semibold text-brand-foreground"
-            >
-              {settings.announcement}
-            </p>
-          ) : null}
+          <SiteHeader
+            contact={contact}
+            announcement={
+              settings?.announcementActive && settings.announcement
+                ? settings.announcement
+                : undefined
+            }
+          />
 
-          <SiteHeader />
-
-          {/* Bottom padding clears the fixed mobile action bar. */}
-          <main id="main" className="flex-1 pb-16 lg:pb-0">
+          {/*
+            Bottom padding clears the fixed mobile action bar. The top padding is
+            the announcement bar's measured height, and 0 when there is no
+            announcement: the bar renders inside the fixed header — anything
+            above the header in flow would sit behind it — so it takes up no flow
+            space of its own, while each page's `pt-28` only clears the nav row.
+          */}
+          <main id="main" className="flex-1 pt-[var(--announce-h,0px)] pb-16 lg:pb-0">
             {children}
           </main>
 
-          <SiteFooter />
-          <MobileActionBar />
+          <SiteFooter contact={contact} />
+          <MobileActionBar contact={contact} />
           <Toaster position="top-center" richColors closeButton />
         </ThemeProvider>
 
-        <JsonLd data={[lodgingBusinessSchema(rooms, summary), websiteSchema]} />
+        <JsonLd data={[lodgingBusinessSchema(rooms, summary, contact), websiteSchema]} />
       </body>
     </html>
   );

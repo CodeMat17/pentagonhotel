@@ -7,8 +7,8 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { getGuestServices } from "@/lib/content";
-import { site, telLink, whatsapp } from "@/lib/site";
+import { getGuestServices, getSettings } from "@/lib/content";
+import { ogImage, resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Guest Services",
@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     "Concierge, airport transfers, laundry, 24-hour room service, car hire, babysitting, currency exchange and medical assistance at Pentagon International Hotel & Suites.",
   alternates: { canonical: "/services" },
   openGraph: {
+    images: [ogImage],
     title: `Guest Services · ${site.name}`,
     description: "Everything reception can arrange, and when it's available.",
     url: `${site.url}/services`,
@@ -26,7 +27,11 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function ServicesPage() {
-  const guestServices = await getGuestServices();
+  const [guestServices, settings] = await Promise.all([
+    getGuestServices(),
+    getSettings(),
+  ]);
+  const contact = resolveContact(settings);
 
   return (
     <>
@@ -106,7 +111,7 @@ export default async function ServicesPage() {
                 className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
                 render={
                   <a
-                    href={whatsapp.transfer}
+                    href={contact.whatsapp.transfer}
                     target="_blank"
                     rel="noopener noreferrer"
                   />
@@ -118,9 +123,9 @@ export default async function ServicesPage() {
                 variant="outline"
                 size="lg"
                 className="h-12 font-bold"
-                render={<a href={telLink} />}
+                render={<a href={contact.telHref} />}
               >
-                <PhoneIcon /> Call {site.phone.display}
+                <PhoneIcon /> Call {contact.phoneDisplay}
               </Button>
               <Button
                 variant="ghost"

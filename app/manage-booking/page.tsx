@@ -5,7 +5,8 @@ import { ManageBooking } from "@/components/booking/manage-booking";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getExtras } from "@/lib/content";
+import { getExtras, getSettings } from "@/lib/content";
+import { resolveContact } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Manage your booking",
@@ -19,7 +20,10 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function ManageBookingPage() {
-  const extraServices = await getExtras();
+  const [extraServices, settings] = await Promise.all([
+    getExtras(),
+    getSettings(),
+  ]);
 
   return (
     <>
@@ -35,7 +39,10 @@ export default async function ManageBookingPage() {
             <Skeleton className="mx-auto h-56 w-full max-w-3xl rounded-2xl" />
           }
         >
-          <ManageBooking extraServices={extraServices} />
+          <ManageBooking
+            extraServices={extraServices}
+            hotel={resolveContact(settings)}
+          />
         </Suspense>
       </Section>
     </>

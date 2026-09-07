@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { RoomsExplorer } from "@/components/rooms-explorer";
 import { getRooms } from "@/lib/content";
 import { Section } from "@/components/section";
-import { site } from "@/lib/site";
+import { ogImage, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Rooms & Suites",
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     "Eight room types at Pentagon International Hotel & Suites, Choba — from the Standard Queen Room at ₦20,000 to the Executive Spring Suite. Every room has 24-hour power, fibre Wi-Fi and air conditioning.",
   alternates: { canonical: "/rooms" },
   openGraph: {
+    images: [ogImage],
     title: `Rooms & Suites · ${site.name}`,
     description:
       "Eight room types, all with 24-hour power and fibre Wi-Fi. Filter by price, size, bed type and amenities.",

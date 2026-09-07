@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheckIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
 
-import { telLink, whatsapp } from "@/lib/site";
+import { type Contact } from "@/lib/site";
 
 /**
  * Call · WhatsApp · Book, pinned to the bottom on phones.
@@ -12,7 +12,7 @@ import { telLink, whatsapp } from "@/lib/site";
  * Hidden inside the booking flow, where it would compete with that page's own
  * sticky summary and Continue button.
  */
-export function MobileActionBar() {
+export function MobileActionBar({ contact }: { contact: Contact }) {
   const pathname = usePathname();
   if (pathname.startsWith("/booking")) return null;
 
@@ -22,12 +22,12 @@ export function MobileActionBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden">
       <nav aria-label="Quick actions" className="flex items-stretch">
-        <a href={telLink} className={`${itemClass} hover:bg-muted`}>
+        <a href={contact.telHref} className={`${itemClass} hover:bg-muted`}>
           <PhoneIcon className="size-5" />
           Call
         </a>
         <a
-          href={whatsapp.reservations}
+          href={contact.whatsapp.reservations}
           target="_blank"
           rel="noopener noreferrer"
           className={`${itemClass} border-x hover:bg-muted`}

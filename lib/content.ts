@@ -446,6 +446,11 @@ export interface SiteSettings {
   announcement: string;
   announcementActive: boolean;
   bookingsOpen: boolean;
+  /* Added after the first release, so a row saved before they existed will not
+     carry them — every consumer falls back to the copy in `lib/site.ts`. */
+  holdUntilTime?: string;
+  cancellationPolicy?: string;
+  noShowPolicy?: string;
 }
 
 export async function getSettings(): Promise<SiteSettings | null> {

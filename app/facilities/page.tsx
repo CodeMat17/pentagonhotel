@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { Button } from "@/components/ui/button";
 import { getFacilityGroups } from "@/lib/content";
-import { site } from "@/lib/site";
+import { ogImage, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Facilities & Amenities",
@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     "Pool, 24-hour gym, spa, business centre, conference halls, secure parking and 24-hour reception at Pentagon International Hotel & Suites, Choba, Port Harcourt.",
   alternates: { canonical: "/facilities" },
   openGraph: {
+    images: [ogImage],
     title: `Facilities & Amenities · ${site.name}`,
     description:
       "Recreation, business, guest services and dining — everything on site, and when it's open.",

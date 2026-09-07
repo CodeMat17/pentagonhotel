@@ -8,7 +8,7 @@ import { Section } from "@/components/section";
 import { Badge } from "@/components/ui/badge";
 import { getPosts } from "@/lib/content";
 import { formatDateLong } from "@/lib/format";
-import { site } from "@/lib/site";
+import { ogImage, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Journal",
@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     "City guides, hotel news and notes from the kitchen — written by the people who work at Pentagon International Hotel & Suites in Choba, Port Harcourt.",
   alternates: { canonical: "/blog" },
   openGraph: {
+    images: [ogImage],
     title: `Journal · ${site.name}`,
     description: "Port Harcourt guides, event notes and news from the hotel.",
     url: `${site.url}/blog`,

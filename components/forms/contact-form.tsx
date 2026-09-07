@@ -30,7 +30,13 @@ const subjects = [
 ];
 
 /** General contact form, with the same honeypot + timing guard as the others. */
-export function ContactForm() {
+export function ContactForm({
+  /** The hotel switchboard to quote, from the dashboard. Not to be confused
+   *  with `phone` below, which is the guest's own number. */
+  hotelPhone = site.phone.display,
+}: {
+  hotelPhone?: string;
+}) {
   const [subject, setSubject] = useState("reservation");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -85,7 +91,7 @@ export function ContactForm() {
       toast.error("We couldn't send that", {
         description: cleanError(
           error,
-          `Please call ${site.phone.display} and we'll take it from there.`,
+          `Please call ${hotelPhone} and we'll take it from there.`,
         ),
       });
     } finally {
@@ -219,7 +225,7 @@ export function ContactForm() {
         <a href="/privacy" className="font-semibold text-brand underline underline-offset-2">
           privacy policy
         </a>
-        . For anything urgent, call {site.phone.display}.
+        . For anything urgent, call {hotelPhone}.
       </p>
     </form>
   );

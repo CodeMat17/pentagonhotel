@@ -22,8 +22,8 @@ import { BookingSearch } from "@/components/booking/booking-search";
 import { GalleryPreview } from "@/components/gallery-preview";
 import { MapEmbed } from "@/components/map-embed";
 import { BrushUnderline } from "@/components/motion/brush-underline";
+import { HeroReveal, HeroWords } from "@/components/motion/hero-reveal";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
-import { WordReveal } from "@/components/motion/text-reveal";
 import { ReviewsCarousel } from "@/components/reviews-carousel";
 import { RoomCard } from "@/components/room-card";
 import { Section, SectionHeading } from "@/components/section";
@@ -36,9 +36,10 @@ import {
   getGallery,
   getOffers,
   getReviews,
+  getSettings,
   getVenues
 } from "@/lib/content";
-import { formatNaira, fullAddress, site, telLink, whatsapp } from "@/lib/site";
+import { formatNaira, resolveContact } from "@/lib/site";
 import heroImage from "@/public/hero-bg-2.webp";
 
 /** The five sides of the Pentagon — the brand promise, made concrete. */
@@ -91,6 +92,7 @@ export default async function HomePage() {
     { reviews, summary: ratingSummary },
     attractions,
     gallery,
+    settings,
   ] = await Promise.all([
     getFeaturedRooms(),
     getOffers(),
@@ -99,8 +101,10 @@ export default async function HomePage() {
     getReviews(),
     getAttractions(),
     getGallery(),
+    getSettings(),
   ]);
 
+  const contact = resolveContact(settings);
   const topOffers = offers.slice(0, 3);
 
   return (
@@ -140,7 +144,7 @@ export default async function HomePage() {
         />
 
         <div className='container-page'>
-          <Reveal y={20} className='max-w-3xl'>
+          <HeroReveal className='max-w-3xl'>
             <p className='eyebrow text-on-image text-[#EBC98A]'>
               <span
                 aria-hidden='true'
@@ -148,15 +152,15 @@ export default async function HomePage() {
               />
               Owhipa Choba · Port Harcourt
             </p>
-          </Reveal>
+          </HeroReveal>
 
-          <WordReveal
-            delay={0.15}
+          <HeroWords
+            delay={70}
             className='display text-on-image mt-5 max-w-4xl text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-7xl'>
             {[
               <span key='pentagon' className='relative inline-block'>
                 Pentagon
-                <BrushUnderline delay={0.75} />
+                <BrushUnderline delay={430} />
               </span>,
               "International",
               "Hotel",
@@ -165,9 +169,11 @@ export default async function HomePage() {
               </span>,
               "Suites",
             ]}
-          </WordReveal>
+          </HeroWords>
 
-          <Reveal y={20} delay={0.45} className='max-w-3xl'>
+          {/* Holds the LCP element, so it rises without fading and starts
+              immediately — see `opaque` in HeroReveal. */}
+          <HeroReveal opaque delay={0} className='max-w-3xl'>
             <p className='text-on-image mt-7 max-w-xl text-lg leading-relaxed text-pretty text-white/90 sm:text-xl'>
               Rooms that stay cool and lit when the street doesn&apos;t. A
               kitchen people drive across town for. Event spaces with their own
@@ -190,15 +196,14 @@ export default async function HomePage() {
                 Best rate guaranteed, booked direct
               </span>
             </div>
-          </Reveal>
+          </HeroReveal>
 
-          <Reveal y={28} delay={0.6} className='mt-9 lg:mt-12'>
+          <HeroReveal delay={230} className='mt-9 lg:mt-12'>
             <BookingSearch />
-          </Reveal>
+          </HeroReveal>
 
-          <Reveal
-            y={16}
-            delay={0.75}
+          <HeroReveal
+            delay={310}
             className='mt-7 hidden grid-cols-4 gap-4 lg:grid'>
             {quickFacts.map(({ Icon, label, value }) => (
               <div
@@ -214,7 +219,7 @@ export default async function HomePage() {
                 </span>
               </div>
             ))}
-          </Reveal>
+          </HeroReveal>
         </div>
 
         <div
@@ -565,7 +570,7 @@ export default async function HomePage() {
           </div>
 
           <Reveal delay={0.05} className='lg:sticky lg:top-28'>
-            <MapEmbed />
+            <MapEmbed address={contact.address} />
           </Reveal>
         </div>
       </Section>
@@ -588,7 +593,7 @@ export default async function HomePage() {
                 who works here will answer.
               </p>
               <address className='mt-6 text-sm not-italic opacity-75'>
-                {fullAddress}
+                {contact.address}
               </address>
             </div>
 
@@ -603,8 +608,8 @@ export default async function HomePage() {
                 variant='secondary'
                 size='lg'
                 className='h-12 font-bold'
-                render={<a href={telLink} />}>
-                <PhoneIcon /> {site.phone.display}
+                render={<a href={contact.telHref} />}>
+                <PhoneIcon /> {contact.phoneDisplay}
               </Button>
               <Button
                 variant='secondary'
@@ -612,7 +617,7 @@ export default async function HomePage() {
                 className='h-12 font-bold'
                 render={
                   <a
-                    href={whatsapp.reservations}
+                    href={contact.whatsapp.reservations}
                     target='_blank'
                     rel='noopener noreferrer'
                   />

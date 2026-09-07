@@ -6,8 +6,8 @@ import { EventQuoteForm } from "@/components/forms/event-quote-form";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
-import { formatNaira, site } from "@/lib/site";
-import { getVenues } from "@/lib/content";
+import { formatNaira, ogImage, resolveContact, site } from "@/lib/site";
+import { getSettings, getVenues } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Events & Conference Facilities",
@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     "Conference halls, meeting rooms, a boardroom and a garden terrace for weddings — up to 300 guests in Choba, Port Harcourt. Request a quote online.",
   alternates: { canonical: "/events" },
   openGraph: {
+    images: [ogImage],
     title: `Events & Conferences · ${site.name}`,
     description:
       "Four spaces up to 300 guests, full AV, dedicated entrance and generator-backed power.",
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function EventsPage() {
-  const venues = await getVenues();
+  const [venues, settings] = await Promise.all([getVenues(), getSettings()]);
+  const contact = resolveContact(settings);
 
   return (
     <>
@@ -88,33 +90,35 @@ export default async function EventsPage() {
                 <h3 className="font-heading text-lg font-extrabold">
                   Capacity by layout
                 </h3>
-                <table className="mt-3 w-full text-sm">
-                  <caption className="sr-only">
-                    Seating capacity for {venue.name} by layout
-                  </caption>
-                  <thead>
-                    <tr className="border-b text-xs tracking-wide text-muted-foreground uppercase">
-                      <th scope="col" className="py-2 text-left font-bold">
-                        Layout
-                      </th>
-                      <th scope="col" className="py-2 text-right font-bold">
-                        Guests
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {venue.capacities.map((capacity) => (
-                      <tr key={capacity.layout} className="border-b last:border-0">
-                        <th scope="row" className="py-2.5 text-left font-semibold">
-                          {capacity.layout}
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <caption className="sr-only">
+                      Seating capacity for {venue.name} by layout
+                    </caption>
+                    <thead>
+                      <tr className="border-b text-xs tracking-wide text-muted-foreground uppercase">
+                        <th scope="col" className="py-2 text-left font-bold">
+                          Layout
                         </th>
-                        <td className="py-2.5 text-right font-extrabold tabular-nums">
-                          {capacity.seats}
-                        </td>
+                        <th scope="col" className="py-2 text-right font-bold">
+                          Guests
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {venue.capacities.map((capacity) => (
+                        <tr key={capacity.layout} className="border-b last:border-0">
+                          <th scope="row" className="py-2.5 text-left font-semibold">
+                            {capacity.layout}
+                          </th>
+                          <td className="py-2.5 text-right font-extrabold tabular-nums">
+                            {capacity.seats}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Reveal>
 
               <Stagger as="ul" className="mt-8 grid gap-2 sm:grid-cols-2">
@@ -155,7 +159,11 @@ export default async function EventsPage() {
           description="One form, everything we need to price it. Our events team replies within one working day — with availability, a layout plan and a number."
         />
         <Reveal delay={0.08} className="mx-auto mt-12 max-w-5xl">
-          <EventQuoteForm venues={venues} />
+          <EventQuoteForm
+            venues={venues}
+            hotelPhone={contact.phoneDisplay}
+            hotelEmail={contact.email}
+          />
         </Reveal>
       </Section>
 

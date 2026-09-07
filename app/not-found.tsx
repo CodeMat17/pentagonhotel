@@ -4,9 +4,12 @@ import { ArrowRightIcon, PhoneIcon } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { primaryNav } from "@/lib/nav";
-import { site, telLink } from "@/lib/site";
+import { getSettings } from "@/lib/content";
+import { resolveContact } from "@/lib/site";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const contact = resolveContact(await getSettings());
+
   return (
     <div className="container-page flex min-h-[70svh] flex-col items-center justify-center py-24 text-center">
       <LogoMark className="size-14 text-brand" />
@@ -32,9 +35,9 @@ export default function NotFound() {
           variant="outline"
           size="lg"
           className="h-12 font-bold"
-          render={<a href={telLink} />}
+          render={<a href={contact.telHref} />}
         >
-          <PhoneIcon /> Call {site.phone.display}
+          <PhoneIcon /> Call {contact.phoneDisplay}
         </Button>
       </div>
 

@@ -44,7 +44,7 @@ import {
 import { cleanError } from "@/lib/client";
 import type { ExtraService } from "@/lib/content";
 import { formatTime12 } from "@/lib/format";
-import { formatNaira, fullAddress, site, telLink } from "@/lib/site";
+import { formatNaira, site, type Contact } from "@/lib/site";
 
 /**
  * Retrieve a booking by reference, then modify or cancel it.
@@ -67,7 +67,15 @@ const STATUS_LABELS: Record<Reservation["status"], string> = {
   "no-show": "Released — no show",
 };
 
-export function ManageBooking({ extraServices }: { extraServices: ExtraService[] }) {
+export function ManageBooking({
+  extraServices,
+  // Named `hotel`, not `contact`: the guest's own email-or-phone lookup value
+  // below already owns that name.
+  hotel,
+}: {
+  extraServices: ExtraService[];
+  hotel: Contact;
+}) {
   const params = useSearchParams();
   const router = useRouter();
   const deepLinkRef = params.get("ref");
@@ -193,9 +201,9 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
             <Button
               size="lg"
               className="mt-6 h-11 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
-              render={<a href={telLink} />}
+              render={<a href={hotel.telHref} />}
             >
-              <PhoneIcon /> Call {site.phone.display}
+              <PhoneIcon /> Call {hotel.phoneDisplay}
             </Button>
           </div>
         )}
@@ -232,10 +240,10 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
                 {booking.roomName} × {booking.roomCount}
               </Detail>
               <Detail label="Check-in">
-                {format(parseISO(booking.checkIn), "EEE d MMM yyyy")} from {site.checkIn}
+                {format(parseISO(booking.checkIn), "EEE d MMM yyyy")} from {formatTime12(hotel.checkIn)}
               </Detail>
               <Detail label="Checkout">
-                {format(parseISO(booking.checkOut), "EEE d MMM yyyy")} by {site.checkOut}
+                {format(parseISO(booking.checkOut), "EEE d MMM yyyy")} by {formatTime12(hotel.checkOut)}
               </Detail>
               <Detail label="Nights">{booking.nights}</Detail>
               <Detail label="Guests">
@@ -332,11 +340,15 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
                   Changing dates reopens the booking form with everything from{" "}
                   {booking.reference} already filled in; confirming it creates a
                   new reservation, which you can then cancel this one against.
-                  Call {site.phone.display} if you would rather we moved it for you.
+                  Call {hotel.phoneDisplay} if you would rather we moved it for you.
                 </p>
               </>
             )}
-            <PrintReceipt booking={booking} extraServices={extraServices} />
+            <PrintReceipt
+              booking={booking}
+              extraServices={extraServices}
+              hotel={hotel}
+            />
           </article>
         )}
       </div>
@@ -357,9 +369,11 @@ export function ManageBooking({ extraServices }: { extraServices: ExtraService[]
 function PrintReceipt({
   booking,
   extraServices,
+  hotel,
 }: {
   booking: Reservation;
   extraServices: ExtraService[];
+  hotel: Contact;
 }) {
   const extras = booking.extras
     .map((id) => extraServices.find((extra) => extra.id === id)?.name)
@@ -373,7 +387,7 @@ function PrintReceipt({
         <div>
           <h2>{site.name}</h2>
           <p>
-            {fullAddress} · {site.phone.display}
+            {hotel.address} · {hotel.phoneDisplay}
           </p>
         </div>
       </header>
@@ -391,10 +405,10 @@ function PrintReceipt({
             {booking.roomName} × {booking.roomCount}
           </ReceiptRow>
           <ReceiptRow label="Check-in">
-            {format(parseISO(booking.checkIn), "EEE d MMM yyyy")} from {site.checkIn}
+            {format(parseISO(booking.checkIn), "EEE d MMM yyyy")} from {formatTime12(hotel.checkIn)}
           </ReceiptRow>
           <ReceiptRow label="Checkout">
-            {format(parseISO(booking.checkOut), "EEE d MMM yyyy")} by {site.checkOut}
+            {format(parseISO(booking.checkOut), "EEE d MMM yyyy")} by {formatTime12(hotel.checkOut)}
           </ReceiptRow>
           <ReceiptRow label="Nights">{booking.nights}</ReceiptRow>
           <ReceiptRow label="Guests">

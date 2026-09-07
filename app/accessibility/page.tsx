@@ -6,7 +6,8 @@ import { Reveal } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { site, telLink } from "@/lib/site";
+import { getSettings } from "@/lib/content";
+import { resolveContact } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Accessibility",
@@ -59,7 +60,12 @@ const hotelAccess = [
   },
 ];
 
-export default function AccessibilityPage() {
+/** The contact details come from the dashboard. */
+export const revalidate = 300;
+
+export default async function AccessibilityPage() {
+  const contact = resolveContact(await getSettings());
+
   return (
     <>
       <PageHeader
@@ -150,12 +156,12 @@ export default function AccessibilityPage() {
             If you hit a barrier anywhere on this site or in the hotel, tell us and
             we will fix it. Email{" "}
             <a
-              href={`mailto:${site.email.general}`}
+              href={`mailto:${contact.email}`}
               className="font-semibold text-brand underline underline-offset-2"
             >
-              {site.email.general}
+              {contact.email}
             </a>{" "}
-            or call {site.phone.display}. We aim to respond within two working days.
+            or call {contact.phoneDisplay}. We aim to respond within two working days.
           </p>
         </Reveal>
 
@@ -163,7 +169,7 @@ export default function AccessibilityPage() {
           <Button
             size="lg"
             className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
-            render={<a href={telLink} />}
+            render={<a href={contact.telHref} />}
           >
             <PhoneIcon /> Talk to us about access needs
           </Button>

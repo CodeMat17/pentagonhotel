@@ -14,7 +14,7 @@
 import { m, q, type BookingStatus } from "@/lib/convex";
 import { runMutation, runQuery } from "@/lib/client";
 import type { ExtraService, RoomSummary } from "@/lib/content";
-import { site } from "@/lib/site";
+import { site, type TaxRates } from "@/lib/site";
 
 export interface StayDetails {
   from: Date;
@@ -78,6 +78,10 @@ export interface PriceBreakdown {
   vat: number;
   serviceCharge: number;
   total: number;
+  /** The rates the amounts above were computed at, so the summary can label
+   *  them without reaching for a second, possibly different, source. */
+  vatRate: number;
+  serviceRate: number;
 }
 
 export function calculatePrice({
@@ -87,6 +91,7 @@ export function calculatePrice({
   extraIds,
   extras,
   promo,
+  taxRates,
 }: {
   room: RoomSummary | null;
   nights: number;
@@ -94,6 +99,9 @@ export function calculatePrice({
   extraIds: string[];
   extras: ExtraService[];
   promo?: AppliedPromo | null;
+  /** From the dashboard's settings row — see `resolveTaxRates`. Required
+   *  rather than defaulted, so no caller can quietly quote a stale rate. */
+  taxRates: TaxRates;
 }): PriceBreakdown {
   const empty: PriceBreakdown = {
     nights,
@@ -105,6 +113,7 @@ export function calculatePrice({
     vat: 0,
     serviceCharge: 0,
     total: 0,
+    ...taxRates,
   };
   if (!room || nights <= 0) return empty;
 
@@ -120,8 +129,8 @@ export function calculatePrice({
   const discount = promo ? Math.round(roomSubtotal * promo.discount) : 0;
 
   const taxable = roomSubtotal - discount + extrasSubtotal;
-  const vat = Math.round(taxable * site.tax.vatRate);
-  const serviceCharge = Math.round(taxable * site.tax.serviceRate);
+  const vat = Math.round(taxable * taxRates.vatRate);
+  const serviceCharge = Math.round(taxable * taxRates.serviceRate);
 
   return {
     nights,
@@ -133,6 +142,7 @@ export function calculatePrice({
     vat,
     serviceCharge,
     total: taxable + vat + serviceCharge,
+    ...taxRates,
   };
 }
 
@@ -190,9 +200,13 @@ export async function checkAvailability(
 export async function createReservation(
   input: Omit<Reservation, "reference" | "createdAt" | "status" | "holdUntil">,
 ): Promise<Reservation> {
-  const { reference, holdUntil } = await runMutation(m.createBooking, input);
+  const { reference, holdUntil, total } = await runMutation(m.createBooking, input);
   return {
     ...input,
+    // The server prices the stay; the estimate this page computed is replaced by
+    // what was actually booked, so the confirmation screen and the confirmation
+    // email cannot disagree.
+    total,
     reference,
     holdUntil,
     createdAt: new Date().toISOString(),

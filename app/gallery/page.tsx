@@ -4,7 +4,7 @@ import { GalleryGrid } from "@/components/gallery-grid";
 import { getGallery } from "@/lib/content";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
-import { site } from "@/lib/site";
+import { ogImage, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     "Photos of the rooms, suites, restaurant, bar, pool, gym, conference hall and the streets around Pentagon International Hotel & Suites in Choba, Port Harcourt.",
   alternates: { canonical: "/gallery" },
   openGraph: {
+    images: [ogImage],
     title: `Gallery · ${site.name}`,
     description: "Rooms, dining, pool, events and the neighbourhood.",
     url: `${site.url}/gallery`,

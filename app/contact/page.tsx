@@ -10,10 +10,13 @@ import {
 
 import { ContactForm } from "@/components/forms/contact-form";
 import { MapEmbed } from "@/components/map-embed";
+import { AddressLink } from "@/components/address-link";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
-import { fullAddress, site, telLink, whatsapp } from "@/lib/site";
+import { getSettings } from "@/lib/content";
+import { formatTime12 } from "@/lib/format";
+import { ogImage, resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -21,45 +24,58 @@ export const metadata: Metadata = {
     "Call 0803 383 3628, message us on WhatsApp or email Pentagon International Hotel & Suites, 1 Solomon Wali Street, Owhipa Choba, Port Harcourt. Reception open 24 hours.",
   alternates: { canonical: "/contact" },
   openGraph: {
+    images: [ogImage],
     title: `Contact · ${site.name}`,
     description: "Phone, WhatsApp, email and address. Reception answers 24 hours.",
     url: `${site.url}/contact`,
   },
 };
 
-const channels = [
-  {
-    Icon: PhoneIcon,
-    title: "Call reception",
-    detail: site.phone.display,
-    note: "24 hours a day, every day",
-    href: telLink,
-  },
-  {
-    Icon: MessageCircleIcon,
-    title: "WhatsApp",
-    detail: "Message us",
-    note: "Usually the fastest reply",
-    href: whatsapp.general,
-    external: true,
-  },
-  {
-    Icon: CalendarIcon,
-    title: "Reservations",
-    detail: site.email.reservations,
-    note: "Bookings, changes and group rates",
-    href: `mailto:${site.email.reservations}`,
-  },
-  {
-    Icon: MailIcon,
-    title: "Events team",
-    detail: site.email.events,
-    note: "Conferences, weddings and quotes",
-    href: `mailto:${site.email.events}`,
-  },
-];
+/** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
+export const revalidate = 300;
 
-export default function ContactPage() {
+/** Built per request: the phone, WhatsApp and inboxes all come from the
+ *  dashboard, so the cards cannot be hoisted to module scope. */
+function contactChannels(contact: ReturnType<typeof resolveContact>) {
+  return [
+    {
+      Icon: PhoneIcon,
+      title: "Call reception",
+      detail: contact.phoneDisplay,
+      note: "24 hours a day, every day",
+      href: contact.telHref,
+    },
+    {
+      Icon: MessageCircleIcon,
+      title: "WhatsApp",
+      detail: "Message us",
+      note: "Usually the fastest reply",
+      href: contact.whatsapp.general,
+      external: true,
+    },
+    {
+      Icon: CalendarIcon,
+      title: "Reservations",
+      detail: contact.reservationsEmail,
+      note: "Bookings, changes and group rates",
+      href: `mailto:${contact.reservationsEmail}`,
+    },
+    {
+      // The settings row models one general inbox, which is the address the
+      // events team works out of; `site.email.events` is its fallback.
+      Icon: MailIcon,
+      title: "Events team",
+      detail: contact.email,
+      note: "Conferences, weddings and quotes",
+      href: `mailto:${contact.email}`,
+    },
+  ];
+}
+
+export default async function ContactPage() {
+  const contact = resolveContact(await getSettings());
+  const channels = contactChannels(contact);
+
   return (
     <>
       <PageHeader
@@ -104,13 +120,13 @@ export default function ContactPage() {
               description="Tell us what you need and we'll come back within one working day — usually within the hour during office hours."
             />
             <Reveal delay={0.06} className="mt-8">
-              <ContactForm />
+              <ContactForm hotelPhone={contact.phoneDisplay} />
             </Reveal>
           </div>
 
           <div>
             <Reveal delay={0.08}>
-              <MapEmbed />
+              <MapEmbed address={contact.address} />
             </Reveal>
 
             <Reveal delay={0.1} className="mt-6 space-y-4">
@@ -118,9 +134,10 @@ export default function ContactPage() {
                 <MapPinIcon className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
                 <div>
                   <h2 className="font-heading text-base font-extrabold">Address</h2>
-                  <address className="mt-1 text-sm not-italic text-muted-foreground">
-                    {fullAddress}
-                  </address>
+                  <AddressLink
+                    address={contact.address}
+                    className="mt-1 text-sm text-muted-foreground"
+                  />
                 </div>
               </div>
 
@@ -144,7 +161,8 @@ export default function ContactPage() {
                     <div className="flex justify-between gap-4">
                       <dt>Check-in / checkout</dt>
                       <dd className="font-semibold">
-                        {site.checkIn} / {site.checkOut}
+                        {formatTime12(contact.checkIn)} /{" "}
+                        {formatTime12(contact.checkOut)}
                       </dd>
                     </div>
                   </dl>

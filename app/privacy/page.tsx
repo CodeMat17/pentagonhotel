@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
-import { site } from "@/lib/site";
+import { getSettings } from "@/lib/content";
+import { resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -13,7 +14,12 @@ export const metadata: Metadata = {
 
 const updated = "1 July 2026";
 
-export default function PrivacyPage() {
+/** The contact address comes from the dashboard. */
+export const revalidate = 300;
+
+export default async function PrivacyPage() {
+  const contact = resolveContact(await getSettings());
+
   return (
     <>
       <PageHeader
@@ -32,10 +38,10 @@ export default function PrivacyPage() {
               Nigeria, is the data controller for the information described here.
               Questions go to{" "}
               <a
-                href={`mailto:${site.email.general}`}
+                href={`mailto:${contact.email}`}
                 className="font-semibold text-brand underline underline-offset-2"
               >
-                {site.email.general}
+                {contact.email}
               </a>
               .
             </p>
@@ -127,10 +133,10 @@ export default function PrivacyPage() {
               your data, ask us to correct or delete it, object to processing,
               restrict it, or ask for it in a portable format. Write to{" "}
               <a
-                href={`mailto:${site.email.general}`}
+                href={`mailto:${contact.email}`}
                 className="font-semibold text-brand underline underline-offset-2"
               >
-                {site.email.general}
+                {contact.email}
               </a>{" "}
               and we will respond within 30 days. You may also complain to the
               Nigeria Data Protection Commission.

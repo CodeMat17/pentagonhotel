@@ -13,8 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { getFaqs } from "@/lib/content";
-import { site, telLink, whatsapp } from "@/lib/site";
+import { getFaqs, getSettings } from "@/lib/content";
+import { ogImage, resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     "Check-in times, cancellation policy, parking, Wi-Fi, airport distance, children, accessibility and payment — answered for Pentagon International Hotel & Suites, Choba.",
   alternates: { canonical: "/faq" },
   openGraph: {
+    images: [ogImage],
     title: `FAQ · ${site.name}`,
     description: "Everything guests ask, answered before you have to call.",
     url: `${site.url}/faq`,
@@ -32,7 +33,8 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function FaqPage() {
-  const faqs = await getFaqs();
+  const [faqs, settings] = await Promise.all([getFaqs(), getSettings()]);
+  const contact = resolveContact(settings);
   const faqCategories = Array.from(new Set(faqs.map((faq) => faq.category)));
 
   return (
@@ -107,9 +109,9 @@ export default async function FaqPage() {
             <Button
               size="lg"
               className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
-              render={<a href={telLink} />}
+              render={<a href={contact.telHref} />}
             >
-              <PhoneIcon /> {site.phone.display}
+              <PhoneIcon /> {contact.phoneDisplay}
             </Button>
             <Button
               variant="outline"
@@ -117,7 +119,7 @@ export default async function FaqPage() {
               className="h-12 font-bold"
               render={
                 <a
-                  href={whatsapp.general}
+                  href={contact.whatsapp.general}
                   target="_blank"
                   rel="noopener noreferrer"
                 />

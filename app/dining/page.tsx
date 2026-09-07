@@ -7,8 +7,8 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
 import { JsonLd, restaurantSchemas } from "@/components/structured-data";
-import { getDiningVenues } from "@/lib/content";
-import { formatNaira, site } from "@/lib/site";
+import { getDiningVenues, getSettings } from "@/lib/content";
+import { formatNaira, ogImage, resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Dining — Solomon's, The Fifth Bar & Terrace Café",
@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     "All-day Nigerian and continental dining at Solomon's, cocktails at The Fifth Bar and coffee at the Terrace Café. Open to hotel guests and to Port Harcourt.",
   alternates: { canonical: "/dining" },
   openGraph: {
+    images: [ogImage],
     title: `Dining · ${site.name}`,
     description:
       "Charcoal jollof, fresh fish pepper soup, cocktails on the terrace. Reserve a table online.",
@@ -27,11 +28,16 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function DiningPage() {
-  const diningVenues = await getDiningVenues();
+  // The restaurant schemas quote the hotel switchboard, so they need the live
+  // settings row too.
+  const [diningVenues, settings] = await Promise.all([
+    getDiningVenues(),
+    getSettings(),
+  ]);
 
   return (
     <>
-      <JsonLd data={restaurantSchemas(diningVenues)} />
+      <JsonLd data={restaurantSchemas(diningVenues, resolveContact(settings))} />
 
       <PageHeader
         title="Dining"
@@ -143,7 +149,10 @@ export default async function DiningPage() {
           description="Walk-ins are welcome, but weekends fill after 8pm. Tell us when, and we'll call to confirm."
         />
         <Reveal delay={0.08} className="mx-auto mt-12 max-w-4xl">
-          <TableReservationForm diningVenues={diningVenues} />
+          <TableReservationForm
+            diningVenues={diningVenues}
+            hotelPhone={resolveContact(settings).phoneDisplay}
+          />
         </Reveal>
       </Section>
 

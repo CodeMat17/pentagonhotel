@@ -64,7 +64,16 @@ const typeItems = eventTypes.map((type) => ({ value: type, label: type }));
  * headcount, room, catering, equipment and contact — so the first reply is a
  * quote rather than a list of questions.
  */
-export function EventQuoteForm({ venues }: { venues: Venue[] }) {
+export function EventQuoteForm({
+  venues,
+  /** The hotel switchboard and events inbox, from the dashboard. */
+  hotelPhone = site.phone.display,
+  hotelEmail = site.email.events,
+}: {
+  venues: Venue[];
+  hotelPhone?: string;
+  hotelEmail?: string;
+}) {
   const today = startOfToday();
 
   const venueItems = [
@@ -156,7 +165,7 @@ export function EventQuoteForm({ venues }: { venues: Venue[] }) {
       toast.error("We couldn't send that", {
         description: cleanError(
           error,
-          `Please call ${site.phone.display} and our events team will help.`,
+          `Please call ${hotelPhone} and our events team will help.`,
         ),
       });
     } finally {
@@ -371,8 +380,8 @@ export function EventQuoteForm({ venues }: { venues: Venue[] }) {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">
-          We reply within one working day. In a hurry? Call {site.phone.display} or
-          email {site.email.events}.
+          We reply within one working day. In a hurry? Call {hotelPhone} or
+          email {hotelEmail}.
         </p>
       </div>
     </form>

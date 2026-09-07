@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { MessageCircleIcon, PhoneIcon } from "lucide-react";
 
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { PageHeader } from "@/components/page-header";
 import { Section } from "@/components/section";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getExtras,
-  getRooms
+  getRooms,
+  getSettings
 } from "@/lib/content";
-import { site } from "@/lib/site";
+import {
+  ogImage,
+  resolvePolicies,
+  resolveContact,
+  resolveTaxRates,
+  site,
+  type Contact,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Book a room",
@@ -18,6 +28,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/booking" },
   robots: { index: true, follow: true },
   openGraph: {
+    images: [ogImage],
     title: `Book a room · ${site.name}`,
     description:
       "Two minutes, no account, no payment online. Reserve now, pay at the hotel.",
@@ -29,7 +40,20 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function BookingPage() {
-  const [rooms, extraServices] = await Promise.all([getRooms(), getExtras()]);
+  // VAT and the service charge are the dashboard's to set, so they are resolved
+  // here and handed to the flow — the browser never picks its own rate.
+  const [rooms, extraServices, settings] = await Promise.all([
+    getRooms(),
+    getExtras(),
+    getSettings(),
+  ]);
+
+  const contact = resolveContact(settings);
+
+  // The dashboard's kill switch. It defaults to open: a settings row that could
+  // not be read must not take the booking form off the site, so only an explicit
+  // `false` closes it.
+  const bookingsOpen = settings?.bookingsOpen !== false;
 
   return (
     <>
@@ -40,12 +64,62 @@ export default async function BookingPage() {
       />
 
       <Section>
-        {/* useSearchParams needs a Suspense boundary to keep the route static. */}
-        <Suspense fallback={<BookingSkeleton />}>
-          <BookingFlow rooms={rooms} extraServices={extraServices} />
-        </Suspense>
+        {bookingsOpen ? (
+          /* useSearchParams needs a Suspense boundary to keep the route static. */
+          <Suspense fallback={<BookingSkeleton />}>
+            <BookingFlow
+              rooms={rooms}
+              extraServices={extraServices}
+              taxRates={resolveTaxRates(settings)}
+              contact={contact}
+              policies={resolvePolicies(settings)}
+            />
+          </Suspense>
+        ) : (
+          <BookingsClosed contact={contact} />
+        )}
       </Section>
     </>
+  );
+}
+
+/**
+ * Shown when the dashboard has closed online booking.
+ *
+ * Closing the form must never mean closing the hotel: the guest still gets the
+ * phone and WhatsApp, because a guest who cannot book online is exactly the one
+ * most likely to want to talk to somebody.
+ */
+function BookingsClosed({ contact }: { contact: Contact }) {
+  return (
+    <div className="mx-auto max-w-xl rounded-2xl bg-card p-8 text-center ring-1 ring-foreground/10">
+      <h2 className="font-heading text-2xl font-extrabold">
+        Online booking is paused
+      </h2>
+      <p className="mt-3 text-muted-foreground">
+        We are not taking reservations through the website just now — but
+        reception is staffed 24 hours and can book you in directly.
+      </p>
+      <div className="mt-6 grid gap-2 sm:grid-cols-2">
+        <Button size="lg" className="h-12 font-bold" render={<a href={contact.telHref} />}>
+          <PhoneIcon /> Call {contact.phoneDisplay}
+        </Button>
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-12 font-bold"
+          render={
+            <a
+              href={contact.whatsapp.reservations}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+        >
+          <MessageCircleIcon /> WhatsApp
+        </Button>
+      </div>
+    </div>
   );
 }
 

@@ -4,7 +4,7 @@ import type {
   Room,
 } from "@/lib/data";
 import type { RatingSummary, RoomSummary } from "@/lib/content";
-import { fullAddress, site } from "@/lib/site";
+import { resolveContact, site, type Contact } from "@/lib/site";
 
 /**
  * Structured data is built from the live content, so it can never describe a
@@ -28,6 +28,12 @@ export function JsonLd({ data }: { data: object | object[] }) {
   );
 }
 
+/**
+ * The dashboard stores the address as a single free-text line, but schema.org
+ * wants it split into locality, region and postal code — so the components stay
+ * here, and only the fields the settings row actually models (telephone, email,
+ * check-in, checkout) follow the dashboard.
+ */
 const postalAddress = {
   "@type": "PostalAddress",
   streetAddress: `${site.address.street}, ${site.address.area}`,
@@ -41,6 +47,9 @@ const postalAddress = {
 export function lodgingBusinessSchema(
   rooms: RoomSummary[],
   ratingSummary: RatingSummary,
+  /** Defaults to the static fallbacks, so a caller with no settings row still
+   *  emits a complete, valid schema rather than an empty telephone. */
+  contact: Contact = resolveContact(),
 ) {
   return {
     "@context": "https://schema.org",
@@ -49,20 +58,20 @@ export function lodgingBusinessSchema(
     name: site.name,
     description: site.description,
     url: site.url,
-    telephone: site.phone.intl,
-    email: site.email.reservations,
+    telephone: contact.phoneIntl,
+    email: contact.reservationsEmail,
     address: postalAddress,
     geo: {
       "@type": "GeoCoordinates",
       latitude: site.geo.latitude,
       longitude: site.geo.longitude,
     },
-    hasMap: `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}`,
+    hasMap: `https://www.google.com/maps?q=${encodeURIComponent(contact.address)}`,
     priceRange: "₦₦",
     currenciesAccepted: "NGN",
     paymentAccepted: "Cash, Credit Card, Bank Transfer, Online Payment",
-    checkinTime: site.checkIn,
-    checkoutTime: site.checkOut,
+    checkinTime: contact.checkIn,
+    checkoutTime: contact.checkOut,
     starRating: { "@type": "Rating", ratingValue: 4 },
     petsAllowed: false,
     smokingAllowed: false,
@@ -132,7 +141,10 @@ export function faqSchema(faqs: FaqItem[]) {
   };
 }
 
-export function restaurantSchemas(diningVenues: DiningVenue[]) {
+export function restaurantSchemas(
+  diningVenues: DiningVenue[],
+  contact: Contact = resolveContact(),
+) {
   return diningVenues.map((venue) => ({
     "@context": "https://schema.org",
     "@type": "Restaurant",
@@ -140,7 +152,7 @@ export function restaurantSchemas(diningVenues: DiningVenue[]) {
     servesCuisine: venue.cuisine,
     description: venue.description,
     address: postalAddress,
-    telephone: site.phone.intl,
+    telephone: contact.phoneIntl,
     url: `${site.url}/dining#${venue.slug}`,
     priceRange: "₦₦",
     containedInPlace: { "@id": `${site.url}/#hotel` },

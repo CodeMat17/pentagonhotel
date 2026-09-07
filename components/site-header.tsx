@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { MenuIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
 
+import { AddressLink } from "@/components/address-link";
+import { AnnouncementBar } from "@/components/announcement-bar";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { primaryNav, secondaryNav } from "@/lib/nav";
-import { site, telLink, whatsapp } from "@/lib/site";
+import { type Contact } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /** Subscribes to scroll as an external store — no setState cascade on mount. */
@@ -28,7 +30,15 @@ function subscribeToScroll(onChange: () => void) {
   return () => window.removeEventListener("scroll", onChange);
 }
 
-export function SiteHeader() {
+export function SiteHeader({
+  announcement,
+  contact,
+}: {
+  announcement?: string;
+  /** Live contact details, resolved on the server and passed down — every field
+   *  is a plain string so it crosses the server/client boundary. */
+  contact: Contact;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -53,6 +63,8 @@ export function SiteHeader() {
           : "border-b border-border/80 bg-background/85 backdrop-blur-lg supports-backdrop-filter:bg-background/70",
       )}
     >
+      {announcement ? <AnnouncementBar text={announcement} /> : null}
+
       <div className="container-page flex pt-1 items-center justify-between gap-4">
         <Link
           href="/"
@@ -93,7 +105,7 @@ export function SiteHeader() {
             variant="ghost"
             size="icon-lg"
             className={cn("hidden sm:inline-flex", overHero && "hover:bg-white/15")}
-            render={<a href={telLink} aria-label={`Call ${site.phone.display}`} />}
+            render={<a href={contact.telHref} aria-label={`Call ${contact.phoneDisplay}`} />}
           >
             <PhoneIcon className="size-[18px]" />
           </Button>
@@ -198,7 +210,7 @@ export function SiteHeader() {
                     variant="outline"
                     size="lg"
                     className="h-11"
-                    render={<a href={telLink} />}
+                    render={<a href={contact.telHref} />}
                   >
                     <PhoneIcon /> Call
                   </Button>
@@ -208,7 +220,7 @@ export function SiteHeader() {
                     className="h-11"
                     render={
                       <a
-                        href={whatsapp.reservations}
+                        href={contact.whatsapp.reservations}
                         target="_blank"
                         rel="noopener noreferrer"
                       />
@@ -218,9 +230,9 @@ export function SiteHeader() {
                   </Button>
                 </div>
                 <p className="pt-1 text-center text-xs text-muted-foreground">
-                  {site.address.street}, {site.address.area}
+                  <AddressLink as="span" address={contact.address} />
                   <br />
-                  {site.phone.display}
+                  {contact.phoneDisplay}
                 </p>
               </div>
             </SheetContent>

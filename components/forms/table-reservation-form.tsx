@@ -38,8 +38,11 @@ const partyItems = partySizes.map((size) => ({
 /** Table booking for the restaurants — single-date calendar, not a range. */
 export function TableReservationForm({
   diningVenues,
+  /** The hotel switchboard, from the dashboard. */
+  hotelPhone = site.phone.display,
 }: {
   diningVenues: DiningVenue[];
+  hotelPhone?: string;
 }) {
   const today = startOfToday();
 
@@ -108,7 +111,7 @@ export function TableReservationForm({
       toast.error("We couldn't send that", {
         description: cleanError(
           error,
-          `Please call ${site.phone.display} to book your table.`,
+          `Please call ${hotelPhone} to book your table.`,
         ),
       });
     } finally {
@@ -251,7 +254,7 @@ export function TableReservationForm({
 
         <p className="text-center text-xs text-muted-foreground">
           Tables are held for 15 minutes. For parties over 12, call{" "}
-          {site.phone.display}.
+          {hotelPhone}.
         </p>
       </div>
     </form>

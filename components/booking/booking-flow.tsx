@@ -50,7 +50,13 @@ import {
 import { cleanError } from "@/lib/client";
 import type { ExtraService, RoomSummary } from "@/lib/content";
 import { formatTime12 } from "@/lib/format";
-import { formatNaira, site } from "@/lib/site";
+import {
+  formatNaira,
+  site,
+  type Contact,
+  type Policies,
+  type TaxRates,
+} from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const STEPS = ["Your stay", "Choose a room", "Extras & details", "Confirm"] as const;
@@ -98,9 +104,18 @@ function readAmendStash(reference: string | null): GuestDetails {
 export function BookingFlow({
   rooms,
   extraServices,
+  taxRates,
+  contact,
+  policies,
 }: {
   rooms: RoomSummary[];
   extraServices: ExtraService[];
+  /** VAT and service charge from the dashboard, resolved on the server. */
+  taxRates: TaxRates;
+  /** The live switchboard number and check-in hours. */
+  contact: Contact;
+  /** The hold hour and policy wording the guest is agreeing to. */
+  policies: Policies;
 }) {
   const params = useSearchParams();
   const today = startOfToday();
@@ -180,8 +195,17 @@ export function BookingFlow({
     : null;
 
   const price = useMemo(
-    () => calculatePrice({ room, nights, roomCount, extraIds, extras: extraServices, promo }),
-    [room, nights, roomCount, extraIds, extraServices, promo],
+    () =>
+      calculatePrice({
+        room,
+        nights,
+        roomCount,
+        extraIds,
+        extras: extraServices,
+        promo,
+        taxRates,
+      }),
+    [room, nights, roomCount, extraIds, extraServices, promo, taxRates],
   );
 
   /**
@@ -200,13 +224,13 @@ export function BookingFlow({
         setAvailability(result);
       } catch {
         toast.error("We couldn't load live availability", {
-          description: `Call ${site.phone.display} and we'll check for you.`,
+          description: `Call ${contact.phoneDisplay} and we'll check for you.`,
         });
       } finally {
         setChecking(false);
       }
     },
-    [adults, children, roomCount, rooms],
+    [adults, children, roomCount, rooms, contact.phoneDisplay],
   );
 
   function goToStep(next: number) {
@@ -322,7 +346,7 @@ export function BookingFlow({
       });
     } catch {
       toast.error("We couldn't complete that booking", {
-        description: `Please call us on ${site.phone.display} and we'll sort it out.`,
+        description: `Please call us on ${contact.phoneDisplay} and we'll sort it out.`,
       });
     } finally {
       setSubmitting(false);
@@ -332,12 +356,18 @@ export function BookingFlow({
   /* ------------------------------------------------------ confirmation */
 
   if (confirmed) {
-    return <Confirmation reservation={confirmed} price={price} />;
+    return (
+      <Confirmation
+        reservation={confirmed}
+        estimate={price.total}
+        contact={contact}
+      />
+    );
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-12">
-      <div>
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+      <div className="min-w-0">
         {amendRef && (
           <div className="mb-6 flex flex-wrap items-start gap-3 rounded-2xl bg-brand-muted p-4 ring-1 ring-brand/25">
             <PencilLineIcon className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
@@ -352,7 +382,7 @@ export function BookingFlow({
                 >
                   cancel {amendRef}
                 </Link>{" "}
-                once the new one is in, or call {site.phone.display} and we will
+                once the new one is in, or call {contact.phoneDisplay} and we will
                 move it for you.
               </p>
             </div>
@@ -695,15 +725,15 @@ export function BookingFlow({
               <p className="mt-2 text-sm leading-relaxed">
                 Your room is held until{" "}
                 <strong>
-                  {formatTime12(site.reservation.holdUntilTime)} on{" "}
+                  {formatTime12(policies.holdUntilTime)} on{" "}
                   {format(range.from, "EEEE d MMMM")}
                 </strong>
                 . If you have not arrived or contacted us by then, the
                 reservation is released and the room offered to other guests.
               </p>
               <p className="mt-2 text-sm leading-relaxed">
-                Running late? Call or WhatsApp {site.phone.display} at any hour
-                and we will keep it for you. {site.reservation.cancellation}
+                Running late? Call or WhatsApp {contact.phoneDisplay} at any hour
+                and we will keep it for you. {policies.cancellation}
               </p>
             </div>
 
@@ -716,7 +746,7 @@ export function BookingFlow({
               />
               <span id="terms-text">
                 I understand the room is held until{" "}
-                {formatTime12(site.reservation.holdUntilTime)} on my arrival date and paid for
+                {formatTime12(policies.holdUntilTime)} on my arrival date and paid for
                 at the hotel, and I accept the{" "}
                 <Link href="/terms#booking" className="font-semibold text-brand underline underline-offset-2">
                   booking terms
@@ -737,7 +767,7 @@ export function BookingFlow({
               <Button
                 variant="outline"
                 size="lg"
-                className="h-12 font-bold"
+                className="h-12 w-full font-bold sm:w-auto"
                 onClick={() => goToStep(2)}
               >
                 <ArrowLeftIcon /> Back
@@ -746,7 +776,7 @@ export function BookingFlow({
                 size="lg"
                 onClick={confirm}
                 disabled={submitting || !agreed}
-                className="h-13 bg-brand px-8 text-base font-extrabold text-brand-foreground hover:bg-brand/90"
+                className="h-auto min-h-13 w-full bg-brand px-6 py-3 text-base font-extrabold text-balance whitespace-normal text-brand-foreground hover:bg-brand/90 sm:w-auto sm:px-8"
               >
                 {submitting ? (
                   <>
@@ -773,6 +803,7 @@ export function BookingFlow({
         range={range}
         extraIds={extraIds}
         price={price}
+        contact={contact}
       />
     </div>
   );
@@ -862,7 +893,7 @@ function StepActions({
   return (
     <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
       {onBack ? (
-        <Button variant="outline" size="lg" className="h-12 font-bold" onClick={onBack}>
+        <Button variant="outline" size="lg" className="h-12 w-full font-bold sm:w-auto" onClick={onBack}>
           <ArrowLeftIcon /> Back
         </Button>
       ) : (
@@ -872,7 +903,7 @@ function StepActions({
         size="lg"
         onClick={onNext}
         disabled={disabled}
-        className="h-12 bg-brand px-6 font-extrabold text-brand-foreground hover:bg-brand/90"
+        className="h-12 w-full bg-brand px-6 font-extrabold text-brand-foreground hover:bg-brand/90 sm:w-auto"
       >
         {nextLabel} <ArrowRightIcon />
       </Button>
@@ -1084,7 +1115,7 @@ function RoomOption({
         />
       </div>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="font-heading text-base font-extrabold">{room.name}</h3>
@@ -1121,7 +1152,7 @@ function RoomOption({
         </ul>
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
+          <p className="min-w-0 text-sm text-muted-foreground">
             <span className="font-heading text-lg font-extrabold text-foreground">
               {formatNaira(room.rate * nights * roomCount)}
             </span>{" "}
@@ -1157,7 +1188,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <dt className="w-40 shrink-0 text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase sm:pt-0.5">
         {label}
       </dt>
-      <dd className="text-sm font-semibold">{children}</dd>
+      <dd className="min-w-0 text-sm font-semibold break-words">{children}</dd>
     </div>
   );
 }
@@ -1171,6 +1202,7 @@ function BookingSummary({
   range,
   extraIds,
   price,
+  contact,
 }: {
   room: RoomSummary | null;
   nights: number;
@@ -1180,11 +1212,12 @@ function BookingSummary({
   range: DateRange | undefined;
   extraIds: string[];
   price: ReturnType<typeof calculatePrice>;
+  contact: Contact;
 }) {
   return (
     <aside
       aria-label="Booking summary"
-      className="lg:sticky lg:top-28 lg:h-fit"
+      className="min-w-0 lg:sticky lg:top-28 lg:h-fit"
     >
       <div className="rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
         <h2 className="font-heading text-lg font-extrabold">Your booking</h2>
@@ -1197,7 +1230,7 @@ function BookingSummary({
                 <>
                   {format(range.from, "d MMM")} – {format(range.to, "d MMM yyyy")}
                   <span className="block text-xs text-muted-foreground">
-                    {nights} night{nights === 1 ? "" : "s"} · check-in {site.checkIn}
+                    {nights} night{nights === 1 ? "" : "s"} · check-in {formatTime12(contact.checkIn)}
                   </span>
                 </>
               ) : (
@@ -1244,12 +1277,12 @@ function BookingSummary({
               <Line label="Extras" value={formatNaira(price.extrasSubtotal)} />
             )}
             <Line
-              label={`VAT (${Math.round(site.tax.vatRate * 100)}%)`}
+              label={`VAT (${Math.round(price.vatRate * 100)}%)`}
               value={formatNaira(price.vat)}
               muted
             />
             <Line
-              label={`Service charge (${Math.round(site.tax.serviceRate * 100)}%)`}
+              label={`Service charge (${Math.round(price.serviceRate * 100)}%)`}
               value={formatNaira(price.serviceCharge)}
               muted
             />
@@ -1287,7 +1320,7 @@ function Line({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className={cn(muted && "text-muted-foreground", accent && "text-brand")}>
+      <dt className={cn("min-w-0", muted && "text-muted-foreground", accent && "text-brand")}>
         {label}
       </dt>
       <dd
@@ -1303,13 +1336,30 @@ function Line({
   );
 }
 
+/**
+ * Everything here reads from the reservation the server returned, not from the
+ * estimate this page computed — including the total, so what the guest is told
+ * they will pay is exactly what the confirmation email says.
+ */
 function Confirmation({
   reservation,
-  price,
+  estimate,
+  contact,
 }: {
   reservation: Reservation;
-  price: ReturnType<typeof calculatePrice>;
+  /** What this page quoted before the server priced the stay. Shown only when
+   *  the two differ — see `rateChanged` below. */
+  estimate: number;
+  contact: Contact;
 }) {
+  /*
+   * The hotel's rates can change between a guest opening the booking flow and
+   * finishing it, and the server prices the stay at the rates in force when it
+   * commits. Saying so plainly costs one line here and saves the front desk an
+   * argument with a guest holding a screenshot of the older number.
+   */
+  const rateChanged = estimate > 0 && estimate !== reservation.total;
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="rounded-3xl bg-card p-8 text-center ring-1 ring-foreground/10 sm:p-12">
@@ -1334,7 +1384,7 @@ function Confirmation({
           <p className="text-xs font-bold tracking-[0.16em] text-brand uppercase">
             Booking reference
           </p>
-          <p className="mt-1 font-heading text-3xl font-extrabold tracking-wider text-brand">
+          <p className="mt-1 font-heading text-3xl font-extrabold tracking-wider break-all text-brand">
             {reservation.reference}
           </p>
           <Button
@@ -1355,10 +1405,10 @@ function Confirmation({
             {reservation.roomName} × {reservation.roomCount}
           </Row>
           <Row label="Check-in">
-            {format(parseISO(reservation.checkIn), "EEEE d MMMM yyyy")} from {site.checkIn}
+            {format(parseISO(reservation.checkIn), "EEEE d MMMM yyyy")} from {formatTime12(contact.checkIn)}
           </Row>
           <Row label="Checkout">
-            {format(parseISO(reservation.checkOut), "EEEE d MMMM yyyy")} by {site.checkOut}
+            {format(parseISO(reservation.checkOut), "EEEE d MMMM yyyy")} by {formatTime12(contact.checkOut)}
           </Row>
           <Row label="Guests">
             {reservation.adults} adult{reservation.adults === 1 ? "" : "s"}
@@ -1366,23 +1416,32 @@ function Confirmation({
               ? `, ${reservation.children} child${reservation.children === 1 ? "" : "ren"}`
               : ""}
           </Row>
-          <Row label="Payment">Pay at the hotel — {formatNaira(price.total)}</Row>
+          <Row label="Payment">Pay at the hotel — {formatNaira(reservation.total)}</Row>
           <Row label="Room held until">
             {formatTime12(reservation.holdUntil.split("T")[1])} on{" "}
             {format(parseISO(reservation.checkIn), "EEEE d MMMM")}
           </Row>
         </dl>
 
+        {rateChanged && (
+          <p className="mt-4 rounded-xl bg-brand-muted/60 p-4 text-left text-sm leading-relaxed ring-1 ring-brand/20">
+            Our rates changed while you were booking, so your total is{" "}
+            <strong>{formatNaira(reservation.total)}</strong> rather than the{" "}
+            {formatNaira(estimate)} estimated earlier. This is the amount shown on
+            your confirmation and the amount you will settle at the hotel.
+          </p>
+        )}
+
         <p className="mt-4 text-left text-xs leading-relaxed text-muted-foreground">
           {site.reservation.noPaymentNotice} If you have not arrived or contacted
           us by the time above, the reservation is released. Running late? Call
-          or WhatsApp {site.phone.display} and we will hold it.
+          or WhatsApp {contact.phoneDisplay} and we will hold it.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button
             size="lg"
-            className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
+            className="h-12 w-full bg-brand font-bold text-brand-foreground hover:bg-brand/90 sm:w-auto"
             render={<Link href={`/reservation/${reservation.reference}`} />}
           >
             View your reservation
@@ -1390,7 +1449,7 @@ function Confirmation({
           <Button
             variant="outline"
             size="lg"
-            className="h-12 font-bold"
+            className="h-12 w-full font-bold sm:w-auto"
             render={<Link href={`/manage-booking?ref=${reservation.reference}`} />}
           >
             Change or cancel
@@ -1398,7 +1457,7 @@ function Confirmation({
         </div>
 
         <p className="mt-6 text-xs text-muted-foreground">
-          Need to change something? Call {site.phone.display} — reception answers
+          Need to change something? Call {contact.phoneDisplay} — reception answers
           24 hours a day.
         </p>
       </div>

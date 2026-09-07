@@ -22,14 +22,15 @@ import {
 import { Section } from "@/components/section";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { getReservation } from "@/lib/content";
+import { getReservation, getSettings } from "@/lib/content";
 import { formatDateLong, formatTime12 } from "@/lib/format";
 import {
   formatNaira,
-  fullAddress,
+  mapsDirectionsUrl,
+  resolveContact,
   site,
-  telLink,
-  whatsappLink,
+  waLink,
+  type Contact,
 } from "@/lib/site";
 
 /**
@@ -70,8 +71,13 @@ export default async function ReservationPage({
   params,
 }: PageProps<"/reservation/[reference]">) {
   const { reference } = await params;
-  const reservation = await getReservation(reference);
+  const [reservation, settings] = await Promise.all([
+    getReservation(reference),
+    getSettings(),
+  ]);
   if (!reservation) notFound();
+
+  const contact = resolveContact(settings);
 
   const cancelled = reservation.status === "cancelled";
   const released = reservation.status === "no-show";
@@ -79,8 +85,8 @@ export default async function ReservationPage({
     reservation.status === "checked-in" || reservation.status === "completed";
   const live = !cancelled && !released;
 
-  const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddress)}`;
-  const whatsapp = whatsappLink(
+  const whatsapp = waLink(
+    contact.whatsappE164,
     `Hello ${site.name}, I have a question about my reservation ${reservation.reference}.`,
   );
 
@@ -92,6 +98,7 @@ export default async function ReservationPage({
           released={released}
           arrived={arrived}
           guestName={reservation.guestName}
+          contact={contact}
         />
 
         <div className="mt-8 rounded-3xl bg-card ring-1 ring-foreground/10">
@@ -171,9 +178,9 @@ export default async function ReservationPage({
           <Button
             size="lg"
             className="h-12 bg-brand font-bold text-brand-foreground hover:bg-brand/90"
-            render={<a href={directions} target="_blank" rel="noreferrer" />}
+            render={<a href={mapsDirectionsUrl} target="_blank" rel="noreferrer" />}
           >
-            <MapPinIcon /> Get directions
+            <MapPinIcon /> Get mapsDirectionsUrl
           </Button>
           <Button
             variant="outline"
@@ -194,7 +201,7 @@ export default async function ReservationPage({
           )}
         </div>
 
-        <HotelInformation />
+        <HotelInformation contact={contact} />
 
         <div className="mt-8 rounded-2xl bg-muted/60 p-6">
           <h2 className="font-heading text-base font-extrabold">
@@ -240,7 +247,7 @@ export default async function ReservationPage({
           <p className="mt-6 text-center text-xs text-muted-foreground">
             We don&apos;t have an email address for this booking, so this page and
             your WhatsApp message are your record of it. Call{" "}
-            {site.phone.display} if you would like it emailed to you.
+            {contact.phoneDisplay} if you would like it emailed to you.
           </p>
         )}
       </div>
@@ -255,11 +262,13 @@ function Banner({
   released,
   arrived,
   guestName,
+  contact,
 }: {
   cancelled: boolean;
   released: boolean;
   arrived: boolean;
   guestName: string;
+  contact: Contact;
 }) {
   if (cancelled || released) {
     return (
@@ -273,7 +282,7 @@ function Banner({
         <p className="mx-auto mt-3 max-w-md text-muted-foreground">
           {cancelled
             ? "This booking has been cancelled and nothing is owed. We would be glad to welcome you another time."
-            : `This room was held for you but we did not hear from you, so it has been released. Call ${site.phone.display} — if it is still free, we will book you straight back in.`}
+            : `This room was held for you but we did not hear from you, so it has been released. Call ${contact.phoneDisplay} — if it is still free, we will book you straight back in.`}
         </p>
       </header>
     );
@@ -319,29 +328,29 @@ function Row({
   );
 }
 
-function HotelInformation() {
+function HotelInformation({ contact }: { contact: Contact }) {
   return (
     <section className="mt-8 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
       <h2 className="font-heading text-base font-extrabold">Hotel information</h2>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
         <Info Icon={MapPinIcon} label="Address">
-          {fullAddress}
+          {contact.address}
         </Info>
         <Info Icon={PhoneIcon} label="Phone">
-          <a href={telLink} className="hover:text-brand">
-            {site.phone.display}
+          <a href={contact.telHref} className="hover:text-brand">
+            {contact.phoneDisplay}
           </a>
           <span className="block text-xs font-normal text-muted-foreground">
             Reception answers 24 hours a day
           </span>
         </Info>
         <Info Icon={MailIcon} label="Email">
-          <a href={`mailto:${site.email.reservations}`} className="break-all hover:text-brand">
-            {site.email.reservations}
+          <a href={`mailto:${contact.reservationsEmail}`} className="break-all hover:text-brand">
+            {contact.reservationsEmail}
           </a>
         </Info>
         <Info Icon={ClockIcon} label="Check-in / check-out">
-          From {formatTime12(site.checkIn)} · by {formatTime12(site.checkOut)}
+          From {formatTime12(contact.checkIn)} · by {formatTime12(contact.checkOut)}
         </Info>
       </dl>
     </section>

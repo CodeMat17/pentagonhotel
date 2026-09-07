@@ -26,9 +26,17 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   getRoom,
-  getRooms
+  getRooms,
+  getSettings
 } from "@/lib/content";
-import { formatNaira, site, telLink, whatsappLink } from "@/lib/site";
+import { formatTime12 } from "@/lib/format";
+import {
+  formatNaira,
+  resolveContact,
+  resolveTaxRates,
+  site,
+  waLink,
+} from "@/lib/site";
 
 /** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
 export const revalidate = 300;
@@ -60,8 +68,17 @@ export async function generateMetadata({
 
 export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
   const { slug } = await params;
-  const [room, rooms] = await Promise.all([getRoom(slug), getRooms()]);
+  const [room, rooms, settings] = await Promise.all([
+    getRoom(slug),
+    getRooms(),
+    getSettings(),
+  ]);
   if (!room) notFound();
+
+  // The rate strip quotes VAT and service, and the panel quotes the switchboard
+  // — both the dashboard's to set.
+  const contact = resolveContact(settings);
+  const taxRates = resolveTaxRates(settings);
 
   const others = rooms.filter((candidate) => candidate.slug !== room.slug).slice(0, 3);
   const schema = roomSchema(room);
@@ -162,8 +179,8 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                 <div className="flex flex-wrap gap-x-2">
                   <dt className="font-bold">Check-in / checkout:</dt>
                   <dd className="text-muted-foreground">
-                    From {site.checkIn} · by {site.checkOut}. Reception is staffed
-                    24 hours.
+                    From {formatTime12(contact.checkIn)} · by{" "}
+                    {formatTime12(contact.checkOut)}. Reception is staffed 24 hours.
                   </dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2">
@@ -210,8 +227,8 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                     {formatNaira(room.rate)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    per night, before {Math.round(site.tax.vatRate * 100)}% VAT and{" "}
-                    {Math.round(site.tax.serviceRate * 100)}% service
+                    per night, before {Math.round(taxRates.vatRate * 100)}% VAT and{" "}
+                    {Math.round(taxRates.serviceRate * 100)}% service
                   </p>
                 </div>
               </div>
@@ -250,7 +267,7 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                   variant="outline"
                   size="lg"
                   className="h-11 font-bold"
-                  render={<a href={telLink} />}
+                  render={<a href={contact.telHref} />}
                 >
                   <PhoneIcon /> Call
                 </Button>
@@ -260,7 +277,8 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
                   className="h-11 font-bold"
                   render={
                     <a
-                      href={whatsappLink(
+                      href={waLink(
+                        contact.whatsappE164,
                         `Hello ${site.name}, I would like to book the ${room.name}.`,
                       )}
                       target="_blank"
@@ -273,7 +291,7 @@ export default async function RoomPage({ params }: PageProps<"/rooms/[slug]">) {
               </div>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                Questions? Reception answers 24 hours on {site.phone.display}.
+                Questions? Reception answers 24 hours on {contact.phoneDisplay}.
               </p>
             </div>
           </Reveal>

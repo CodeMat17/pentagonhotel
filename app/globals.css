@@ -228,6 +228,74 @@
   }
 }
 
+/* ------------------------------------------------------- hero entrance
+ *
+ * The hero is above the fold, so its entrance is CSS rather than
+ * framer-motion: a JS-driven fade keeps the headline and its paragraph at
+ * opacity 0 until React has hydrated, which made that paragraph the LCP
+ * element at ~1.4s. Painting on the CSS timeline instead starts the cascade
+ * at first paint and hands LCP back roughly a second.
+ *
+ * Below-the-fold sections still use <Reveal>: they are scroll-triggered, so
+ * their cost is never on the critical path.
+ *
+ * The `both` fill mode holds the from-state through the delay. The
+ * reduced-motion
+ * block above collapses every animation to 0.01ms, which lands each element
+ * on its final state immediately.                                          */
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-rise {
+  animation: hero-rise 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+/* The same rise, minus the fade, for the element that is the LCP candidate.
+   Chrome does not treat a fully transparent element as painted, so a fade
+   pushes Largest Contentful Paint out to the end of the animation — about
+   700ms of pure render delay. Moving without fading paints at full opacity on
+   the first frame, so LCP lands with First Contentful Paint instead. */
+@keyframes hero-rise-opaque {
+  from {
+    transform: translate3d(0, 1.25rem, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-rise-opaque {
+  animation: hero-rise-opaque 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+/* The hero's brush underline draws itself. Both paths carry pathLength="1",
+   so one normalised dash offset animates strokes of different real lengths. */
+@keyframes brush-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.brush-stroke {
+  stroke-dasharray: 1;
+  animation: brush-draw 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--brush-delay, 0ms);
+}
+
 @keyframes ken-burns {
   from {
     transform: scale(1.06) translate3d(0, 0, 0);

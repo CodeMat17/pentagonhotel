@@ -343,7 +343,9 @@ export const m = {
       | "notifications"
       | "remindersSent"
     >,
-    { reference: string; holdUntil: string }
+    /** `total` is the server's own quote — what was actually booked. The total
+     *  sent up is only the browser's estimate. */
+    { reference: string; holdUntil: string; total: number }
   >("bookings:create"),
   cancelBooking: makeFunctionReference<
     "mutation",

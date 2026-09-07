@@ -4,7 +4,12 @@ import { useState } from "react";
 import { MapPinIcon, PlayIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { fullAddress, site } from "@/lib/site";
+import {
+  fullAddress,
+  mapsDirectionsUrl,
+  mapsEmbedUrl,
+  site,
+} from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,12 +20,15 @@ import { cn } from "@/lib/utils";
  * placeholder and only injects the iframe when a guest asks for it — which also
  * means Google sets no cookies until they do.
  */
-export function MapEmbed({ className }: { className?: string }) {
+export function MapEmbed({
+  className,
+  /** The dashboard address. Falls back to the static one when not passed. */
+  address = fullAddress,
+}: {
+  className?: string;
+  address?: string;
+}) {
   const [loaded, setLoaded] = useState(false);
-
-  const query = encodeURIComponent(fullAddress);
-  const embedSrc = `https://www.google.com/maps?q=${query}&z=15&output=embed`;
-  const directions = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
 
   return (
     <div
@@ -31,8 +39,8 @@ export function MapEmbed({ className }: { className?: string }) {
     >
       {loaded ? (
         <iframe
-          title={`Map showing ${site.name}, ${fullAddress}`}
-          src={embedSrc}
+          title={`Map showing ${site.name}, ${address}`}
+          src={mapsEmbedUrl}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           className="size-full border-0"
@@ -44,7 +52,7 @@ export function MapEmbed({ className }: { className?: string }) {
           <div>
             <p className="font-heading text-lg font-extrabold">{site.name}</p>
             <address className="mt-1 text-sm not-italic text-muted-foreground">
-              {fullAddress}
+              {address}
             </address>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
@@ -60,7 +68,7 @@ export function MapEmbed({ className }: { className?: string }) {
               size="lg"
               className="h-11 font-bold"
               render={
-                <a href={directions} target="_blank" rel="noopener noreferrer" />
+                <a href={mapsDirectionsUrl} target="_blank" rel="noopener noreferrer" />
               }
             >
               Get directions

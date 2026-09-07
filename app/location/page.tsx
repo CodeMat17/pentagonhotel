@@ -8,11 +8,13 @@ import {
 } from "lucide-react";
 
 import { MapEmbed } from "@/components/map-embed";
+import { AddressLink } from "@/components/address-link";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PageHeader } from "@/components/page-header";
 import { Section, SectionHeading } from "@/components/section";
-import { getAttractions } from "@/lib/content";
-import { fullAddress, site } from "@/lib/site";
+import { getAttractions, getSettings } from "@/lib/content";
+import { formatTime12 } from "@/lib/format";
+import { ogImage, resolveContact, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Location & Directions",
@@ -20,6 +22,7 @@ export const metadata: Metadata = {
     "Pentagon International Hotel & Suites is at 1 Solomon Wali Street, Owhipa Choba, Port Harcourt — 1.2km from UNIPORT and 22km from Port Harcourt International Airport.",
   alternates: { canonical: "/location" },
   openGraph: {
+    images: [ogImage],
     title: `Location & Directions · ${site.name}`,
     description:
       "Five minutes from the University of Port Harcourt, 35 minutes from the airport.",
@@ -54,7 +57,11 @@ const gettingHere = [
 export const revalidate = 300;
 
 export default async function LocationPage() {
-  const attractions = await getAttractions();
+  const [attractions, settings] = await Promise.all([
+    getAttractions(),
+    getSettings(),
+  ]);
+  const contact = resolveContact(settings);
 
   const categories = Array.from(
     new Set(attractions.map((place) => place.category)),
@@ -76,10 +83,11 @@ export default async function LocationPage() {
               title={site.name}
               description={
                 <>
-                  <address className="not-italic">{fullAddress}</address>
+                  <AddressLink address={contact.address} />
                   <p className="mt-3">
-                    Reception is staffed 24 hours. Check-in from {site.checkIn},
-                    checkout by {site.checkOut}.
+                    Reception is staffed 24 hours. Check-in from{" "}
+                    {formatTime12(contact.checkIn)}, checkout by{" "}
+                    {formatTime12(contact.checkOut)}.
                   </p>
                 </>
               }
@@ -108,7 +116,7 @@ export default async function LocationPage() {
           </div>
 
           <Reveal delay={0.06} className="lg:sticky lg:top-28 lg:h-fit">
-            <MapEmbed />
+            <MapEmbed address={contact.address} />
             <div className="mt-5 rounded-2xl bg-muted/60 p-5">
               <h2 className="flex items-center gap-2 font-heading text-base font-extrabold">
                 <MapPinIcon className="size-4 text-brand" aria-hidden="true" />

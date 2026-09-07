@@ -1,19 +1,20 @@
 import Link from "next/link";
-import {
-  ClockIcon,
-  MailIcon,
-  MapPinIcon,
-  MessageCircleIcon,
-  PhoneIcon,
-} from "lucide-react";
+import { ClockIcon, MailIcon, MapPinIcon, PhoneIcon } from "lucide-react";
 
-import { FacebookIcon, InstagramIcon, XIcon } from "@/components/social-icons";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  WhatsAppIcon,
+  XIcon,
+} from "@/components/social-icons";
+import { AddressLink } from "@/components/address-link";
 
 import { Logo } from "@/components/logo";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { Separator } from "@/components/ui/separator";
+import { formatTime12 } from "@/lib/format";
 import { footerNav } from "@/lib/nav";
-import { fullAddress, site, telLink, whatsapp } from "@/lib/site";
+import { site, type Contact } from "@/lib/site";
 
 const socials = [
   { href: site.social.instagram, label: "Instagram", Icon: InstagramIcon },
@@ -21,7 +22,14 @@ const socials = [
   { href: site.social.x, label: "X", Icon: XIcon },
 ];
 
-export function SiteFooter() {
+/**
+ * The contact block shows the dashboard's settings row — the single source of
+ * truth for the hotel's contact details — already resolved by the root layout,
+ * which reads it once for the header, the action bar and the schema too.
+ * `resolveContact` supplies the static fallbacks, so the footer still renders
+ * if no row has been saved.
+ */
+export function SiteFooter({ contact }: { contact: Contact }) {
   const year = new Date().getFullYear();
 
   return (
@@ -54,7 +62,9 @@ export function SiteFooter() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {footerNav.map((column) => (
               <nav key={column.title} aria-label={column.title}>
-                <h2 className="font-heading text-sm font-bold">{column.title}</h2>
+                <h2 className="font-heading text-sm font-bold">
+                  {column.title}
+                </h2>
                 <ul className="mt-4 space-y-2.5">
                   {column.links.map((link) => (
                     <li key={link.href + link.label}>
@@ -75,18 +85,21 @@ export function SiteFooter() {
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2.5">
                   <MapPinIcon className="mt-0.5 size-4 shrink-0 text-brand" />
-                  <address className="not-italic">{fullAddress}</address>
+                  <AddressLink address={contact.address} />
                 </li>
                 <li className="flex gap-2.5">
                   <PhoneIcon className="mt-0.5 size-4 shrink-0 text-brand" />
-                  <a href={telLink} className="transition-colors hover:text-foreground">
-                    {site.phone.display}
+                  <a
+                    href={contact.telHref}
+                    className="transition-colors hover:text-foreground"
+                  >
+                    {contact.phoneDisplay}
                   </a>
                 </li>
                 <li className="flex gap-2.5">
-                  <MessageCircleIcon className="mt-0.5 size-4 shrink-0 text-brand" />
+                  <WhatsAppIcon className="mt-0.5 size-4 shrink-0 text-brand" />
                   <a
-                    href={whatsapp.general}
+                    href={contact.whatsapp.general}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="transition-colors hover:text-foreground"
@@ -97,10 +110,10 @@ export function SiteFooter() {
                 <li className="flex gap-2.5">
                   <MailIcon className="mt-0.5 size-4 shrink-0 text-brand" />
                   <a
-                    href={`mailto:${site.email.reservations}`}
+                    href={`mailto:${contact.email}`}
                     className="break-all transition-colors hover:text-foreground"
                   >
-                    {site.email.reservations}
+                    {contact.email}
                   </a>
                 </li>
                 <li className="flex gap-2.5">
@@ -108,7 +121,8 @@ export function SiteFooter() {
                   <span>
                     Reception open 24 hours
                     <br />
-                    Check-in {site.checkIn} · Checkout {site.checkOut}
+                    Check-in {formatTime12(contact.checkIn)} · Checkout{" "}
+                    {formatTime12(contact.checkOut)}
                   </span>
                 </li>
               </ul>
@@ -123,8 +137,8 @@ export function SiteFooter() {
             © {year} {site.name}. All rights reserved.
           </p>
           <p className="sm:text-right">
-            Registered in Nigeria · RC 1839204 · Rivers State Hospitality Licence
-            PH/HTL/2019/0442
+            Registered in Nigeria · RC 1839204 · Rivers State Hospitality
+            Licence PH/HTL/2019/0442
           </p>
         </div>
       </div>
