@@ -146,10 +146,7 @@ export default async function HomePage() {
         <div className='container-page'>
           <HeroReveal className='max-w-3xl'>
             <p className='eyebrow text-on-image text-[#EBC98A]'>
-              <span
-                aria-hidden='true'
-                className='h-px w-6 bg-[#EBC98A]'
-              />
+              <span aria-hidden='true' className='h-px w-6 bg-[#EBC98A]' />
               Owhipa Choba · Port Harcourt
             </p>
           </HeroReveal>
@@ -175,9 +172,8 @@ export default async function HomePage() {
               immediately — see `opaque` in HeroReveal. */}
           <HeroReveal opaque delay={0} className='max-w-3xl'>
             <p className='text-on-image mt-7 max-w-xl text-lg leading-relaxed text-pretty text-white/90 sm:text-xl'>
-              Rooms that stay cool and lit when the street doesn&apos;t. A
-              kitchen people drive across town for. Event spaces with their own
-              front door. Five minutes from UNIPORT.
+              Cool, comfortable rooms. A kitchen worth the drive. Event spaces
+              with their own private entrance. Just five minutes from UNIPORT.
             </p>
 
             <div className='mt-7 flex flex-wrap items-center gap-2.5 text-sm font-semibold'>
