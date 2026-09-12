@@ -153,7 +153,7 @@ export default async function HomePage() {
 
           <HeroWords
             delay={70}
-            className='display text-on-image mt-5 max-w-4xl text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-7xl'>
+            className='display text-on-image mt-5 max-w-4xl font-["Times_New_Roman",Times,serif] text-[3.2rem] leading-[1.06] sm:text-7xl lg:text-[5.5rem]'>
             {[
               <span key='pentagon' className='relative inline-block'>
                 Pentagon
