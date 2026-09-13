@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 /** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 /** Built per request: the phone, WhatsApp and inboxes all come from the
  *  dashboard, so the cards cannot be hoisted to module scope. */

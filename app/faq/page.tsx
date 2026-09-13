@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 /** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function FaqPage() {
   const [faqs, settings] = await Promise.all([getFaqs(), getSettings()]);

@@ -61,7 +61,7 @@ const hotelAccess = [
 ];
 
 /** The contact details come from the dashboard. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function AccessibilityPage() {
   const contact = resolveContact(await getSettings());

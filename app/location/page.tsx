@@ -54,7 +54,7 @@ const gettingHere = [
 ];
 
 /** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function LocationPage() {
   const [attractions, settings] = await Promise.all([

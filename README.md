@@ -25,8 +25,9 @@ With that variable unset, every content read falls back to the bundled copy in
 net if Convex is unreachable. Guest-facing writes have nothing to fall back to,
 so those forms tell the guest to call instead.
 
-Pages revalidate every five minutes (`revalidate = 300`), so an edit made in the
-dashboard is live within five.
+Pages are prerendered and refresh on demand: every content save in the dashboard
+calls `/api/revalidate`, so edits go live on the next visit. As a safety net,
+pages also revalidate once a day (`revalidate = 86400`).
 
 ## Running it
 

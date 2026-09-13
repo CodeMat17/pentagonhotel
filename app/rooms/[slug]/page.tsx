@@ -39,7 +39,7 @@ import {
 } from "@/lib/site";
 
 /** Content edits appear within five minutes; see `revalidate` in lib/content.ts. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   const rooms = await getRooms();

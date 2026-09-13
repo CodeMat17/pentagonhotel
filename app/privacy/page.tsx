@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const updated = "1 July 2026";
 
 /** The contact address comes from the dashboard. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function PrivacyPage() {
   const contact = resolveContact(await getSettings());

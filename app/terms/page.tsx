@@ -17,7 +17,7 @@ const updated = "1 July 2026";
 
 /** The hold hour, the policy wording and the tax rates are all the dashboard's
  *  to set, so this page is rendered per request like the rest. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function TermsPage() {
   const settings = await getSettings();

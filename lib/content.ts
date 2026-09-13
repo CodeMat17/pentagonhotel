@@ -50,7 +50,7 @@ import {
  */
 
 /** Pages revalidate on this interval; content edits appear within five minutes. */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 const image = (img: ConvexImage) => ({ src: img.url, alt: img.alt });
 
