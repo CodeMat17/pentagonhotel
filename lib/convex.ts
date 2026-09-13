@@ -325,6 +325,12 @@ export const q = {
     { reference: string },
     PublicReservation | null
   >("bookings:byPublicReference"),
+  /** Rooms left per room slug for `[checkIn, checkOut)`, from live reservations. */
+  availability: makeFunctionReference<
+    "query",
+    { checkIn: string; checkOut: string },
+    Record<string, number>
+  >("bookings:availability"),
 } as const;
 
 /* ---------------------------------------------------------------- mutations */

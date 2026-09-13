@@ -159,22 +159,25 @@ export async function validatePromoCode(code: string): Promise<AppliedPromo | nu
     : null;
 }
 
+/** A calendar date as `yyyy-mm-dd`, in the guest's local calendar. */
+function dayString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 /**
- * Stand-in availability check.
- *
- * Deterministically derives "rooms left" from the room slug and the arrival
- * date, so the same search always returns the same answer (a random number
- * would re-roll on every render and look broken). Replace the body with a call
- * to the property management system — the signature already allows it to be
- * async and to fail.
+ * Live availability: rooms left per room type for the stay, counted from real
+ * reservations in Convex. A stay stops holding its room once it is completed at
+ * check-out (12 noon on the departure date), so the room shows up again here.
  */
 export async function checkAvailability(
-  stay: Pick<StayDetails, "from" | "adults" | "children" | "rooms">,
+  stay: Pick<StayDetails, "from" | "to" | "adults" | "children" | "rooms">,
   rooms: RoomSummary[],
 ): Promise<Record<string, number>> {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  const dayKey = Math.floor(stay.from.getTime() / 86_400_000);
+  const left = await runQuery(q.availability, {
+    checkIn: dayString(stay.from),
+    checkOut: dayString(stay.to),
+  });
   const guests = stay.adults + stay.children;
 
   return Object.fromEntries(
@@ -182,9 +185,7 @@ export async function checkAvailability(
       if (room.maxAdults + room.maxChildren < Math.ceil(guests / stay.rooms)) {
         return [room.slug, 0];
       }
-      const seed = [...room.slug].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-      const booked = (seed + dayKey) % (room.inventory + 1);
-      return [room.slug, Math.max(0, room.inventory - booked)];
+      return [room.slug, left[room.slug] ?? 0];
     }),
   );
 }

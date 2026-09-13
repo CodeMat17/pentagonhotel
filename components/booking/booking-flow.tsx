@@ -214,11 +214,11 @@ export function BookingFlow({
    * keeps the request tied to the action that caused it.
    */
   const loadAvailability = useCallback(
-    async (from: Date) => {
+    async (from: Date, to: Date) => {
       setChecking(true);
       try {
         const result = await checkAvailability(
-          { from, adults, children, rooms: roomCount },
+          { from, to, adults, children, rooms: roomCount },
           rooms,
         );
         setAvailability(result);
@@ -233,10 +233,30 @@ export function BookingFlow({
     [adults, children, roomCount, rooms, contact.phoneDisplay],
   );
 
+  /**
+   * Every arrival at the room step re-reads availability — forward from the
+   * dates, back from extras, or a jump on the stepper — so a count shown there
+   * is never one fetched before someone (possibly this guest) booked.
+   */
   function goToStep(next: number) {
     setStep(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (next === 1 && range?.from && range?.to) {
+      void loadAvailability(range.from, range.to);
+    }
   }
+
+  // A page restored from the browser's back/forward cache keeps its old state;
+  // refresh the counts if it comes back showing them.
+  useEffect(() => {
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted && step === 1 && range?.from && range?.to) {
+        void loadAvailability(range.from, range.to);
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [step, range, loadAvailability]);
 
   function nextFromStay() {
     if (!range?.from || !range?.to || nights < 1) {
@@ -246,7 +266,6 @@ export function BookingFlow({
       return;
     }
     goToStep(1);
-    void loadAvailability(range.from);
   }
 
   function nextFromRoom() {
@@ -340,6 +359,8 @@ export function BookingFlow({
         total: price.total,
       });
       setConfirmed(reservation);
+      // These counts predate the booking just made; never show them again.
+      setAvailability(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
       toast.success("Booking confirmed", {
         description: `Your reference is ${reservation.reference}.`,
